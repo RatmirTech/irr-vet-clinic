@@ -1,0 +1,52 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню администратора
+        a(href="/admin/dashboard") Дашборд
+        a(href="/admin/vets") Ветеринары
+        a(href="/admin/services" class="active") Услуги
+        a(href="/admin/schedule") Расписание
+        a(href="/admin/clients") Клиенты
+
+      .main-panel
+        h1.dashboard-title= service ? 'Редактировать услугу' : 'Добавить услугу'
+
+        if error
+          .flash-message.flash-error
+            span.close-btn ✕
+            = error
+
+        .form-wrapper
+          form(method="POST" enctype="multipart/form-data" action=service ? `/admin/services/${service.id}` : '/admin/services' id="serviceForm")
+            .form-row
+              .form-group
+                label(for="name") Название услуги *
+                input#name(type="text" name="name" value=service?.name required)
+
+              .form-group
+                label(for="price") Цена (₽) *
+                input#price(type="number" name="price" value=service?.price step="0.01" min="0" required)
+
+            .form-row
+              .form-group
+                label(for="durationMin") Длительность (минут)
+                input#durationMin(type="number" name="durationMin" value=service?.duration_min min="5" step="5")
+
+            .form-group
+              label(for="description") Описание услуги
+              textarea#description(name="description" placeholder="Подробное описание услуги")= service?.description
+
+            .form-group
+              label(for="photo") Фото услуги
+              input#photo(type="file" name="photo" accept="image/*")
+              if service?.photo_url
+                .photo-preview
+                  p Текущее фото:
+                  img(src=service.photo_url alt=service.name style="max-width: 200px; border-radius: 4px;")
+
+            .form-actions
+              button.btn.btn-primary(type="submit")= service ? 'Сохранить изменения' : 'Добавить услугу'
+              a.btn.btn-secondary(href="/admin/services") Отмена

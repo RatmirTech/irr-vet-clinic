@@ -4,7 +4,7 @@ block content
   .container
     .dashboard
       .sidebar
-        h3 Меню
+        h3 Меню администратора
         a(href="/admin/dashboard") Дашборд
         a(href="/admin/vets" class="active") Ветеринары
         a(href="/admin/services") Услуги
@@ -12,17 +12,38 @@ block content
         a(href="/admin/clients") Клиенты
 
       .main-panel
-        h1.dashboard-title Управление ветеринарами
-        a.btn.btn-primary(href="/admin/vets/new") + Добавить ветеринара
+        .panel-header
+          h1.dashboard-title Управление ветеринарами
+          a.btn.btn-primary(href="/admin/vets/new") + Добавить ветеринара
 
-        .table-responsive
-          table
-            thead
-              tr
-                th ФИО
-                th Специализация
-                th Опыт
-                th Действия
-            tbody
-              tr
-                td colspan="4" Ветеринаров нет
+        if vets && vets.length > 0
+          .table-responsive
+            table
+              thead
+                tr
+                  th Фото
+                  th ФИО
+                  th Специализация
+                  th Опыт
+                  th Действия
+              tbody
+                each vet in vets
+                  tr
+                    td
+                      if vet.photo_url
+                        img(src=vet.photo_url alt=vet.full_name style="max-width: 50px; max-height: 50px; border-radius: 4px; object-fit: cover;")
+                      else
+                        img(src="/images/logo.png" alt="Нет фото" style="max-width: 50px; max-height: 50px;")
+                    td= vet.full_name
+                    td= vet.specialization
+                    td= vet.experience + ' лет'
+                    td
+                      .actions
+                        a.btn.btn-sm.btn-primary(href=`/admin/vets/${vet.id}/edit`) Редактировать
+                        form(method="POST" action=`/admin/vets/${vet.id}/delete` style="display:inline;")
+                          button.btn.btn-sm.btn-danger(type="submit" onclick="return confirm('Вы уверены?')") Удалить
+        else
+          .empty-state
+            h3 Ветеринаров нет
+            p
+              a(href="/admin/vets/new") Добавьте первого ветеринара

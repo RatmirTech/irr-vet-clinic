@@ -4,7 +4,7 @@ block content
   .container
     .dashboard
       .sidebar
-        h3 Меню
+        h3 Меню администратора
         a(href="/admin/dashboard") Дашборд
         a(href="/admin/vets") Ветеринары
         a(href="/admin/services" class="active") Услуги
@@ -12,17 +12,40 @@ block content
         a(href="/admin/clients") Клиенты
 
       .main-panel
-        h1.dashboard-title Управление услугами
-        a.btn.btn-primary(href="/admin/services/new") + Добавить услугу
+        .panel-header
+          h1.dashboard-title Управление услугами
+          a.btn.btn-primary(href="/admin/services/new") + Добавить услугу
 
-        .table-responsive
-          table
-            thead
-              tr
-                th Название
-                th Описание
-                th Цена
-                th Действия
-            tbody
-              tr
-                td colspan="4" Услуг нет
+        if services && services.length > 0
+          .table-responsive
+            table
+              thead
+                tr
+                  th Фото
+                  th Название
+                  th Описание
+                  th Цена
+                  th Время
+                  th Действия
+              tbody
+                each service in services
+                  tr
+                    td
+                      if service.photo_url
+                        img(src=service.photo_url alt=service.name style="max-width: 50px; max-height: 50px; border-radius: 4px; object-fit: cover;")
+                      else
+                        img(src="/images/logo.png" alt="Нет фото" style="max-width: 50px; max-height: 50px;")
+                    td= service.name
+                    td= service.description ? service.description.substring(0, 50) + '...' : '-'
+                    td ₽ #{service.price}
+                    td= service.duration_min + ' мин'
+                    td
+                      .actions
+                        a.btn.btn-sm.btn-primary(href=`/admin/services/${service.id}/edit`) Редактировать
+                        form(method="POST" action=`/admin/services/${service.id}/delete` style="display:inline;")
+                          button.btn.btn-sm.btn-danger(type="submit" onclick="return confirm('Вы уверены?')") Удалить
+        else
+          .empty-state
+            h3 Услуг нет
+            p
+              a(href="/admin/services/new") Добавьте первую услугу

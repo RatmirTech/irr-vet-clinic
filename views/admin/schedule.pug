@@ -4,7 +4,7 @@ block content
   .container
     .dashboard
       .sidebar
-        h3 Меню
+        h3 Меню администратора
         a(href="/admin/dashboard") Дашборд
         a(href="/admin/vets") Ветеринары
         a(href="/admin/services") Услуги
@@ -13,17 +13,31 @@ block content
 
       .main-panel
         h1.dashboard-title Управление расписанием
-        a.btn.btn-primary(href="/admin/schedule/generate") + Сгенерировать слоты
 
-        .table-responsive
-          table
-            thead
-              tr
-                th Ветеринар
-                th Дата
-                th Время
-                th Статус
-                th Действия
-            tbody
-              tr
-                td colspan="5" Расписание отсутствует
+        .form-wrapper
+          h3 Генерация слотов
+          form(method="POST" action="/admin/schedule/generate" id="generateForm")
+            .form-row
+              .form-group
+                label(for="vetId") Ветеринар *
+                select#vetId(name="vetId" required)
+                  option(value="") Выберите ветеринара...
+                  each vet in vets
+                    option(value=vet.id)= vet.full_name
+
+              .form-group
+                label(for="date") Дата *
+                input#date(type="date" name="date" required)
+
+            .form-group
+              label Время приёмов (выберите несколько):
+              .time-checkboxes
+                - const times = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+                each time in times
+                  .checkbox-item
+                    input(type="checkbox" id=`time-${time}` name="times" value=time)
+                    label(for=`time-${time}`)= time
+
+            .form-actions
+              button.btn.btn-primary(type="submit") Сгенерировать слоты
+              a.btn.btn-secondary(href="/admin/schedule") Отмена

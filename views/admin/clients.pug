@@ -4,7 +4,7 @@ block content
   .container
     .dashboard
       .sidebar
-        h3 Меню
+        h3 Меню администратора
         a(href="/admin/dashboard") Дашборд
         a(href="/admin/vets") Ветеринары
         a(href="/admin/services") Услуги
@@ -14,15 +14,26 @@ block content
       .main-panel
         h1.dashboard-title Управление клиентами
 
-        .table-responsive
-          table
-            thead
-              tr
-                th ФИО
-                th Email
-                th Телефон
-                th Животных
-                th Действия
-            tbody
-              tr
-                td colspan="5" Клиентов нет
+        if clients && clients.length > 0
+          .table-responsive
+            table
+              thead
+                tr
+                  th ФИО
+                  th Email
+                  th Телефон
+                  th Животных
+                  th Статус
+              tbody
+                each client in clients
+                  tr
+                    td= client.full_name
+                    td= client.user_id ? 'client@email.com' : '-'
+                    td= client.phone || '-'
+                    td 0
+                    td
+                      span.badge.badge-success Активен
+        else
+          .empty-state
+            h3 Клиентов нет
+            p Когда клиенты зарегистрируются, они появятся здесь

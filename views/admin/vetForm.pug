@@ -1,0 +1,62 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню администратора
+        a(href="/admin/dashboard") Дашборд
+        a(href="/admin/vets" class="active") Ветеринары
+        a(href="/admin/services") Услуги
+        a(href="/admin/schedule") Расписание
+        a(href="/admin/clients") Клиенты
+
+      .main-panel
+        h1.dashboard-title= vet ? 'Редактировать ветеринара' : 'Добавить ветеринара'
+
+        if error
+          .flash-message.flash-error
+            span.close-btn ✕
+            = error
+
+        .form-wrapper
+          form(method="POST" enctype="multipart/form-data" action=vet ? `/admin/vets/${vet.id}` : '/admin/vets' id="vetForm")
+            .form-row
+              .form-group
+                label(for="fullName") ФИО *
+                input#fullName(type="text" name="fullName" value=vet?.full_name required)
+
+              .form-group
+                label(for="email") Email
+                input#email(type="email" name="email" disabled value=(vet ? 'Не изменяется' : ''))
+
+            if !vet
+              .form-row
+                .form-group
+                  label(for="password") Пароль *
+                  input#password(type="password" name="password" placeholder="Минимум 6 символов" required)
+
+            .form-row
+              .form-group
+                label(for="specialization") Специализация
+                input#specialization(type="text" name="specialization" value=vet?.specialization placeholder="Хирургия, Терапия, и т.д.")
+
+              .form-group
+                label(for="experience") Опыт (лет)
+                input#experience(type="number" name="experience" value=vet?.experience min="0")
+
+            .form-group
+              label(for="bio") Описание врача
+              textarea#bio(name="bio" placeholder="Краткое описание опыта и специализации")= vet?.bio
+
+            .form-group
+              label(for="photo") Фото врача
+              input#photo(type="file" name="photo" accept="image/*")
+              if vet?.photo_url
+                .photo-preview
+                  p Текущее фото:
+                  img(src=vet.photo_url alt=vet.full_name style="max-width: 200px; border-radius: 4px;")
+
+            .form-actions
+              button.btn.btn-primary(type="submit")= vet ? 'Сохранить изменения' : 'Добавить ветеринара'
+              a.btn.btn-secondary(href="/admin/vets") Отмена

@@ -4,7 +4,7 @@ block content
   .container
     .dashboard
       .sidebar
-        h3 Меню
+        h3 Меню администратора
         a(href="/admin/dashboard" class="active") Дашборд
         a(href="/admin/vets") Ветеринары
         a(href="/admin/services") Услуги
@@ -17,16 +17,24 @@ block content
         .stats-grid
           .stat-card
             h4 Ветеринаров
-            .number 0
+            .number= stats?.vets || 0
           .stat-card
             h4 Клиентов
-            .number 0
-          .stat-card
-            h4 Записей
-            .number 0
+            .number= stats?.clients || 0
           .stat-card
             h4 Услуг
-            .number 0
+            .number= stats?.services || 0
+          .stat-card
+            h4 Записей сегодня
+            .number= stats?.appointments || 0
 
-        h2 Добро пожаловать в панель администратора!
-        p Управляйте клиникой через меню слева.
+        .info-section
+          h2 Добро пожаловать в панель администратора!
+          p Здесь вы можете управлять всеми аспектами работы клиники.
+
+          .quick-actions
+            h3 Быстрые действия
+            .card-actions
+              a.btn.btn-primary(href="/admin/vets/new") + Добавить ветеринара
+              a.btn.btn-primary(href="/admin/services/new") + Добавить услугу
+              a.btn.btn-secondary(href="/admin/schedule") Управить расписанием
