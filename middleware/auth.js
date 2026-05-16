@@ -38,10 +38,19 @@ const isVetOrAdmin = (req, res, next) => {
   }
 };
 
+const isSuperAdmin = (req, res, next) => {
+  if (req.session.userId && req.session.role === 'admin' && req.session.isSuperAdmin) {
+    next();
+  } else {
+    res.status(403).render('errors/403');
+  }
+};
+
 module.exports = {
   isAuthenticated,
   isClient,
   isVet,
   isAdmin,
   isVetOrAdmin,
+  isSuperAdmin,
 };

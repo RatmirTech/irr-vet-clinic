@@ -1,0 +1,43 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню администратора
+        a(href="/admin/dashboard") Дашборд
+        a(href="/admin/vets") Ветеринары
+        a(href="/admin/services") Услуги
+        a(href="/admin/schedule") Расписание
+        a(href="/admin/clients") Клиенты
+        if isSuperAdmin
+          a(href="/admin/admins" class="active") Администраторы
+
+      .main-panel
+        .page-header
+          h1.dashboard-title Администраторы
+          a.btn.btn-primary(href="/admin/admins/new") + Добавить администратора
+
+        table.table
+          thead
+            tr
+              th Email
+              th Тип
+              th Дата создания
+              th Действия
+          tbody
+            each admin in admins
+              tr
+                td= admin.email
+                td
+                  if admin.is_super_admin
+                    span.badge.badge-super Супер-администратор
+                  else
+                    span.badge.badge-admin Администратор
+                td= new Date(admin.created_at).toLocaleDateString('ru-RU')
+                td
+                  if !admin.is_super_admin
+                    form(method="POST" action=`/admin/admins/${admin.id}/delete` style="display:inline")
+                      button.btn.btn-danger(type="submit" onclick="return confirm('Удалить администратора?')") Удалить
+                  else
+                    span.text-muted —

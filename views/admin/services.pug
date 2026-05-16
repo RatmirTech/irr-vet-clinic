@@ -10,6 +10,8 @@ block content
         a(href="/admin/services" class="active") Услуги
         a(href="/admin/schedule") Расписание
         a(href="/admin/clients") Клиенты
+        if isSuperAdmin
+          a(href="/admin/admins") Администраторы
 
       .main-panel
         .panel-header

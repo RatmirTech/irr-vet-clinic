@@ -11,8 +11,14 @@ const runMigrations = async () => {
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         role VARCHAR(50) NOT NULL CHECK (role IN ('guest', 'client', 'vet', 'admin')),
+        is_super_admin BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+
+    // Add is_super_admin column if it doesn't exist (for existing databases)
+    await db.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN DEFAULT FALSE
     `);
 
     // Create clients table
@@ -146,6 +152,25 @@ const runMigrations = async () => {
     await db.query(`CREATE INDEX IF NOT EXISTS idx_med_cards_animal_id ON med_cards(animal_id)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_visits_med_card_id ON visits(med_card_id)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_visits_vet_id ON visits(vet_id)`);
+
+    // Seed super admin if no super admin exists
+    const bcrypt = require('bcryptjs');
+    const superAdminCheck = await db.query(`SELECT id FROM users WHERE is_super_admin = TRUE LIMIT 1`);
+    if (superAdminCheck.rows.length === 0) {
+      const email = process.env.SUPER_ADMIN_EMAIL;
+      const password = process.env.SUPER_ADMIN_PASSWORD;
+      if (!email || !password) {
+        throw new Error('SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD must be set in .env');
+      }
+      const hash = await bcrypt.hash(password, 10);
+      await db.query(
+        `INSERT INTO users (email, password_hash, role, is_super_admin)
+         VALUES ($1, $2, 'admin', TRUE)
+         ON CONFLICT (email) DO UPDATE SET is_super_admin = TRUE`,
+        [email, hash]
+      );
+      console.log(`✓ Super admin created: ${email}`);
+    }
 
     console.log('✓ All tables created successfully');
   } catch (err) {

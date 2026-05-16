@@ -5,6 +5,8 @@ const ClientModel = require('../models/clientModel');
 const ServiceModel = require('../models/serviceModel');
 const ScheduleModel = require('../models/scheduleModel');
 
+const bcrypt = require('bcryptjs');
+
 const adminController = {
   getDashboard: async (req, res) => {
     try {
@@ -284,6 +286,70 @@ const adminController = {
     } catch (err) {
       console.error(err);
       res.status(500).send('Ошибка при генерации слотов');
+    }
+  },
+
+  // Admin management (super admin only)
+  getAdmins: async (req, res) => {
+    try {
+      const result = await db.query(
+        `SELECT id, email, is_super_admin, created_at FROM users WHERE role = 'admin' ORDER BY is_super_admin DESC, created_at ASC`
+      );
+      res.render('admin/admins', {
+        pageTitle: 'Управление администраторами',
+        admins: result.rows,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).send('Ошибка при загрузке администраторов');
+    }
+  },
+
+  getNewAdmin: (req, res) => {
+    res.render('admin/adminForm', { pageTitle: 'Добавить администратора', adminUser: null });
+  },
+
+  postAdmin: async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      if (!email || !password) {
+        return res.status(400).render('admin/adminForm', {
+          pageTitle: 'Добавить администратора',
+          adminUser: null,
+          error: 'Email и пароль обязательны',
+        });
+      }
+      const hash = await bcrypt.hash(password, 10);
+      await db.query(
+        `INSERT INTO users (email, password_hash, role, is_super_admin) VALUES ($1, $2, 'admin', FALSE)`,
+        [email, hash]
+      );
+      req.flash('success', 'Администратор успешно добавлен');
+      res.redirect('/admin/admins');
+    } catch (err) {
+      console.error(err);
+      res.status(500).render('admin/adminForm', {
+        pageTitle: 'Добавить администратора',
+        adminUser: null,
+        error: 'Ошибка при создании администратора',
+      });
+    }
+  },
+
+  postDeleteAdmin: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const result = await db.query(`SELECT is_super_admin FROM users WHERE id = $1`, [id]);
+      if (!result.rows[0] || result.rows[0].is_super_admin) {
+        req.flash('error', 'Невозможно удалить супер-администратора');
+        return res.redirect('/admin/admins');
+      }
+      await db.query(`DELETE FROM users WHERE id = $1 AND is_super_admin = FALSE`, [id]);
+      req.flash('success', 'Администратор удалён');
+      res.redirect('/admin/admins');
+    } catch (err) {
+      console.error(err);
+      res.status(500).send('Ошибка при удалении');
     }
   },
 

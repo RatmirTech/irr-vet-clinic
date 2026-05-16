@@ -26,9 +26,11 @@ app.use((req, res, next) => {
   if (req.session.userId) {
     res.locals.userId = req.session.userId;
     res.locals.role = req.session.role;
+    res.locals.isSuperAdmin = req.session.isSuperAdmin || false;
     res.locals.isAuthenticated = true;
   } else {
     res.locals.isAuthenticated = false;
+    res.locals.isSuperAdmin = false;
   }
   res.locals.flash = req.flash();
   next();

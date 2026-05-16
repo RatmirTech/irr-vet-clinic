@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { isAdmin } = require('../middleware/auth');
+const { isAdmin, isSuperAdmin } = require('../middleware/auth');
 const adminController = require('../controllers/adminController');
 const { uploadVetPhoto, uploadServicePhoto } = require('../config/multer');
 
@@ -57,5 +57,11 @@ router.post('/schedule/generate', isAdmin, adminController.postGenerateSlots);
 
 // Clients
 router.get('/clients', isAdmin, adminController.getClients);
+
+// Admin management (super admin only)
+router.get('/admins', isSuperAdmin, adminController.getAdmins);
+router.get('/admins/new', isSuperAdmin, adminController.getNewAdmin);
+router.post('/admins', isSuperAdmin, adminController.postAdmin);
+router.post('/admins/:id/delete', isSuperAdmin, adminController.postDeleteAdmin);
 
 module.exports = router;

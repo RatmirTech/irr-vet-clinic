@@ -37,6 +37,7 @@ const authController = {
 
       req.session.userId = user.id;
       req.session.role = user.role;
+      req.session.isSuperAdmin = user.is_super_admin || false;
 
       if (user.role === 'client') {
         const client = await ClientModel.findByUserId(user.id);
@@ -126,7 +127,6 @@ const authController = {
         console.error(err);
         return res.status(500).send('Ошибка при выходе');
       }
-      req.flash('success', 'Вы успешно вышли из системы');
       res.redirect('/');
     });
   },

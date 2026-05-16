@@ -10,6 +10,8 @@ block content
         a(href="/admin/services" class="active") Услуги
         a(href="/admin/schedule") Расписание
         a(href="/admin/clients") Клиенты
+        if isSuperAdmin
+          a(href="/admin/admins") Администраторы
 
       .main-panel
         h1.dashboard-title= service ? 'Редактировать услугу' : 'Добавить услугу'
@@ -24,25 +26,25 @@ block content
             .form-row
               .form-group
                 label(for="name") Название услуги *
-                input#name(type="text" name="name" value=service?.name required)
+                input#name(type="text" name="name" value=(service ? service.name : '') required)
 
               .form-group
                 label(for="price") Цена (₽) *
-                input#price(type="number" name="price" value=service?.price step="0.01" min="0" required)
+                input#price(type="number" name="price" value=(service ? service.price : '') step="0.01" min="0" required)
 
             .form-row
               .form-group
                 label(for="durationMin") Длительность (минут)
-                input#durationMin(type="number" name="durationMin" value=service?.duration_min min="5" step="5")
+                input#durationMin(type="number" name="durationMin" value=(service ? service.duration_min : '') min="5" step="5")
 
             .form-group
               label(for="description") Описание услуги
-              textarea#description(name="description" placeholder="Подробное описание услуги")= service?.description
+              textarea#description(name="description" placeholder="Подробное описание услуги")= service ? service.description : ''
 
             .form-group
               label(for="photo") Фото услуги
               input#photo(type="file" name="photo" accept="image/*")
-              if service?.photo_url
+              if service && service.photo_url
                 .photo-preview
                   p Текущее фото:
                   img(src=service.photo_url alt=service.name style="max-width: 200px; border-radius: 4px;")
