@@ -17,16 +17,16 @@ block content
         .stats-grid
           .stat-card
             h4 Ветеринаров
-            .number= stats?.vets || 0
+            .number= (stats && stats.vets) || 0
           .stat-card
             h4 Клиентов
-            .number= stats?.clients || 0
+            .number= (stats && stats.clients) || 0
           .stat-card
             h4 Услуг
-            .number= stats?.services || 0
+            .number= (stats && stats.services) || 0
           .stat-card
             h4 Записей сегодня
-            .number= stats?.appointments || 0
+            .number= (stats && stats.appointments) || 0
 
         .info-section
           h2 Добро пожаловать в панель администратора!

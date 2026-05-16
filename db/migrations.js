@@ -1,103 +1,153 @@
 const db = require('../config/db');
 
-const createMigrationsTable = async () => {
-  try {
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS migrations (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL UNIQUE,
-        executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-  } catch (err) {
-    console.error('Error creating migrations table:', err);
-  }
-};
-
-const hasMigrationRun = async (name) => {
-  try {
-    const result = await db.query(
-      'SELECT * FROM migrations WHERE name = $1',
-      [name]
-    );
-    return result.rows.length > 0;
-  } catch (err) {
-    console.error('Error checking migration status:', err);
-    return false;
-  }
-};
-
-const recordMigration = async (name) => {
-  try {
-    await db.query(
-      'INSERT INTO migrations (name) VALUES ($1)',
-      [name]
-    );
-  } catch (err) {
-    console.error('Error recording migration:', err);
-  }
-};
-
-const migration001 = async () => {
-  try {
-    const hasRun = await hasMigrationRun('001_init_schema');
-    if (hasRun) return;
-
-    const fs = require('fs');
-    const path = require('path');
-    const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf-8');
-    const statements = schema.split(';').filter(stmt => stmt.trim());
-
-    for (const statement of statements) {
-      if (statement.trim()) {
-        await db.query(statement);
-      }
-    }
-
-    await recordMigration('001_init_schema');
-    console.log('✓ Migration 001_init_schema completed');
-  } catch (err) {
-    console.error('Error running migration 001:', err);
-  }
-};
-
-const migration002 = async () => {
-  try {
-    const hasRun = await hasMigrationRun('002_seed_data');
-    if (hasRun) return;
-
-    const fs = require('fs');
-    const path = require('path');
-    const seed = fs.readFileSync(path.join(__dirname, 'seed.sql'), 'utf-8');
-    const statements = seed.split(';').filter(stmt => stmt.trim());
-
-    for (const statement of statements) {
-      if (statement.trim()) {
-        try {
-          await db.query(statement);
-        } catch (err) {
-          // Ignore duplicate key errors for seed data
-          if (err.code !== '23505') {
-            throw err;
-          }
-        }
-      }
-    }
-
-    await recordMigration('002_seed_data');
-    console.log('✓ Migration 002_seed_data completed');
-  } catch (err) {
-    console.error('Error running migration 002:', err);
-  }
-};
-
 const runMigrations = async () => {
   try {
     console.log('Running database migrations...');
-    await createMigrationsTable();
-    await migration001();
-    await migration002();
-    console.log('✓ All migrations completed');
+
+    // Create users table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(50) NOT NULL CHECK (role IN ('guest', 'client', 'vet', 'admin')),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create clients table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS clients (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL UNIQUE,
+        full_name VARCHAR(255) NOT NULL,
+        phone VARCHAR(20),
+        avatar_url VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create vets table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS vets (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL UNIQUE,
+        full_name VARCHAR(255) NOT NULL,
+        specialization VARCHAR(255),
+        experience INTEGER,
+        photo_url VARCHAR(255),
+        bio TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create animals table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS animals (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        species VARCHAR(100),
+        breed VARCHAR(100),
+        birth_date DATE,
+        gender VARCHAR(20),
+        photo_url VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create services table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS services (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL UNIQUE,
+        description TEXT,
+        price DECIMAL(10, 2) NOT NULL,
+        duration_min INTEGER,
+        photo_url VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create schedule_slots table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS schedule_slots (
+        id SERIAL PRIMARY KEY,
+        vet_id INTEGER NOT NULL,
+        slot_date DATE NOT NULL,
+        slot_time TIME NOT NULL,
+        is_available BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (vet_id) REFERENCES vets(id) ON DELETE CASCADE,
+        UNIQUE(vet_id, slot_date, slot_time)
+      )
+    `);
+
+    // Create appointments table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS appointments (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        vet_id INTEGER NOT NULL,
+        animal_id INTEGER NOT NULL,
+        slot_id INTEGER,
+        service_id INTEGER,
+        status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'completed', 'cancelled')),
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+        FOREIGN KEY (vet_id) REFERENCES vets(id) ON DELETE CASCADE,
+        FOREIGN KEY (animal_id) REFERENCES animals(id) ON DELETE CASCADE,
+        FOREIGN KEY (slot_id) REFERENCES schedule_slots(id) ON DELETE SET NULL,
+        FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE SET NULL
+      )
+    `);
+
+    // Create med_cards table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS med_cards (
+        id SERIAL PRIMARY KEY,
+        animal_id INTEGER NOT NULL UNIQUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (animal_id) REFERENCES animals(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create visits table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS visits (
+        id SERIAL PRIMARY KEY,
+        med_card_id INTEGER NOT NULL,
+        appointment_id INTEGER,
+        vet_id INTEGER NOT NULL,
+        visit_date DATE NOT NULL,
+        diagnosis TEXT,
+        treatment TEXT,
+        prescriptions TEXT,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (med_card_id) REFERENCES med_cards(id) ON DELETE CASCADE,
+        FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL,
+        FOREIGN KEY (vet_id) REFERENCES vets(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create indexes for better performance
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_vets_user_id ON vets(user_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_animals_client_id ON animals(client_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_schedule_slots_vet_id ON schedule_slots(vet_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_appointments_client_id ON appointments(client_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_appointments_vet_id ON appointments(vet_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_appointments_animal_id ON appointments(animal_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_med_cards_animal_id ON med_cards(animal_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_visits_med_card_id ON visits(med_card_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_visits_vet_id ON visits(vet_id)`);
+
+    console.log('✓ All tables created successfully');
   } catch (err) {
     console.error('Error running migrations:', err);
   }
