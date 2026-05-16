@@ -1,0 +1,16 @@
+node_modules/
+.DS_Store
+.env.local
+.env.*.local
+*.log
+npm-debug.log*
+public/uploads/*
+!public/uploads/.gitkeep
+dist/
+build/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.env

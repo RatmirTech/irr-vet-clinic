@@ -1,0 +1,33 @@
+{
+  "name": "irr-vet-clinic",
+  "version": "1.0.0",
+  "description": "КАИ 4311 Курсовая по веб программированию Ветеринарная клиника",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "mocha test/**/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RatmirTech/irr-vet-clinic.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RatmirTech/irr-vet-clinic/issues"
+  },
+  "homepage": "https://github.com/RatmirTech/irr-vet-clinic#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "body-parser": "^2.2.2",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "mocha": "^11.7.5",
+    "multer": "^2.1.1",
+    "pg": "^8.20.0",
+    "pug": "^3.0.4"
+  }
+}

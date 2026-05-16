@@ -1,0 +1,32 @@
+doctype html
+html(lang="ru")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title= pageTitle || 'Ветеринарная клиника'
+    link(rel="stylesheet" href="/css/style.css")
+    link(rel="stylesheet" href="/css/auth.css")
+    link(rel="stylesheet" href="/css/dashboard.css")
+    link(rel="stylesheet" href="/css/cards.css")
+    link(href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet")
+  body
+    header.header
+      nav.navbar
+        .navbar-container
+          .navbar-brand
+            a(href="/") Ветеринарная клиника
+          button.nav-burger#nav-burger ☰
+          .nav-menu#nav-menu
+            include ../layout/nav.pug
+
+    main.main-content
+      block content
+
+    footer.footer
+      include ../layout/footer.pug
+
+    script(src="https://code.jquery.com/jquery-3.6.0.min.js")
+    script(src="/js/main.js")
+    script(src="/js/ajax.js")
+    script(src="/js/appointment.js")
+    script(src="/js/validate.js")

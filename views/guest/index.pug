@@ -1,0 +1,26 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .hero
+      h1 Добро пожаловать в ветеринарную клинику
+      p Лучший уход для ваших питомцев
+      if !isAuthenticated
+        a.btn.btn-primary(href="/auth/login") Записаться на приём
+        a.btn.btn-secondary(href="/vets") Наши ветеринары
+
+    .services-preview
+      h2 Наши услуги
+      .cards-grid
+        - for (let i = 0; i < 3; i++)
+          .card
+            .card-image
+              img(src="/images/logo.png" alt="Услуга")
+            .card-content
+              h3 Услуга
+              p Описание услуги
+
+    .info-section
+      h2 О нас
+      p Мы предоставляем высококачественные ветеринарные услуги для всех видов домашних животных.
+      p Наш опытный персонал готов помочь вашим питомцам быть здоровыми и счастливыми.
