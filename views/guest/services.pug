@@ -1,0 +1,29 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    h1 Наши услуги
+
+    if services && services.length > 0
+      .services-grid
+        each service in services
+          .service-card
+            .card-image
+              img(src=service.photo_url || "/images/logo.png" alt=service.name)
+              .card-overlay
+                a(href="#") Подробнее
+            .card-content
+              h3= service.name
+              .description= service.description
+              .price ₽ #{service.price}
+              .duration Время приёма: #{service.duration_min || 0} минут
+
+              .card-actions
+                if isAuthenticated && role === 'client'
+                  a.btn.btn-primary(href="/appointments/new") Записаться на приём
+                else
+                  a.btn.btn-primary(href="/auth/login") Войти для записи
+    else
+      .empty-state
+        h3 Услуг нет
+        p Попробуйте позже или свяжитесь с нами

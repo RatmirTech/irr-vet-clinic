@@ -160,7 +160,7 @@ body {
 /* Hero Section */
 .hero {
   text-align: center;
-  padding: 60px 20px;
+  padding: 80px 20px;
   background: linear-gradient(135deg, var(--color-primary) 0%, #1e4577 100%);
   color: var(--color-surface);
   border-radius: var(--radius);
@@ -170,15 +170,18 @@ body {
 .hero h1 {
   font-size: 48px;
   margin-bottom: 20px;
+  font-weight: 700;
 }
 
 .hero p {
   font-size: 20px;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
+  opacity: 0.95;
 }
 
 .hero a {
-  margin: 0 10px;
+  display: inline-block;
+  margin: 0 10px 10px 10px;
 }
 
 /* Cards Grid */
@@ -279,6 +282,7 @@ body {
   color: var(--color-primary);
   margin-bottom: 20px;
   font-size: 32px;
+  font-weight: 700;
 }
 
 .info-section p {
@@ -287,11 +291,144 @@ body {
   margin-bottom: 15px;
 }
 
+.cta-block {
+  margin-top: 40px;
+  padding-top: 40px;
+  border-top: 2px solid var(--color-bg);
+  text-align: center;
+}
+
+.cta-block h3 {
+  color: var(--color-primary);
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.cta-block a {
+  display: inline-block;
+  margin: 0 10px;
+  margin-bottom: 10px;
+}
+
+.cta-block p {
+  margin: 20px 0 10px 0;
+  color: var(--color-text-muted);
+}
+
+.cta-block p a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.cta-block p a:hover {
+  text-decoration: underline;
+}
+
+.vets-preview h2,
 .services-preview h2 {
   color: var(--color-primary);
   font-size: 32px;
   margin-bottom: 30px;
   text-align: center;
+  font-weight: 700;
+}
+
+.vets-preview,
+.services-preview {
+  margin-bottom: 60px;
+}
+
+/* Vet Detail */
+.vet-detail {
+  background-color: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 40px;
+  box-shadow: var(--shadow);
+  margin: 20px 0;
+}
+
+.vet-header {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 40px;
+  margin-bottom: 40px;
+  align-items: start;
+}
+
+.vet-photo {
+  width: 100%;
+}
+
+.vet-photo img {
+  width: 100%;
+  border-radius: var(--radius);
+  object-fit: cover;
+  height: 400px;
+  box-shadow: var(--shadow);
+}
+
+.vet-info h1 {
+  color: var(--color-primary);
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.vet-info .specialization,
+.vet-info .experience {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: var(--color-text);
+}
+
+.vet-info strong {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.vet-bio {
+  margin-bottom: 40px;
+}
+
+.vet-bio h2 {
+  color: var(--color-primary);
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.vet-bio p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--color-text-muted);
+}
+
+.vet-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.vet-actions a {
+  display: inline-block;
+}
+
+.back-link {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-bg);
+}
+
+.back-link a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.back-link a:hover {
+  color: #1e4577;
+  text-decoration: underline;
 }
 
 /* Responsive */
@@ -335,5 +472,30 @@ body {
 
   .error-page p {
     font-size: 18px;
+  }
+
+  .vet-header {
+    grid-template-columns: 1fr;
+  }
+
+  .vet-photo img {
+    height: 300px;
+  }
+
+  .vet-actions {
+    flex-direction: column;
+  }
+
+  .vet-actions a {
+    width: 100%;
+    text-align: center;
+  }
+
+  .hero h1 {
+    font-size: 32px;
+  }
+
+  .hero p {
+    font-size: 16px;
   }
 }

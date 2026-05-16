@@ -1,0 +1,36 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    if vet
+      .vet-detail
+        .vet-header
+          .vet-photo
+            img(src=vet.photo_url || "/images/logo.png" alt=vet.full_name)
+          .vet-info
+            h1= vet.full_name
+            .specialization
+              strong Специализация:
+              |  #{vet.specialization}
+            .experience
+              strong Опыт работы:
+              |  #{vet.experience || 0} лет
+
+        .vet-bio
+          h2 О враче
+          p= vet.bio
+
+        .vet-actions
+          if isAuthenticated && role === 'client'
+            a.btn.btn-primary(href="/appointments/new") Записаться на приём
+          else if !isAuthenticated
+            a.btn.btn-primary(href="/auth/login") Войти для записи
+            a.btn.btn-secondary(href="/auth/register") Зарегистрироваться
+
+        .back-link
+          a(href="/vets") ← Назад к списку ветеринаров
+    else
+      .empty-state
+        h3 Ветеринар не найден
+        p
+          a(href="/vets") Вернуться к списку ветеринаров

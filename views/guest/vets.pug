@@ -1,0 +1,28 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    h1 Наши ветеринары
+
+    if vets && vets.length > 0
+      .vets-grid
+        each vet in vets
+          .vet-card
+            .card-image
+              img(src=vet.photo_url || "/images/logo.png" alt=vet.full_name)
+              .card-overlay
+                a(href=`/vets/${vet.id}`) Подробнее
+            .card-content
+              h3= vet.full_name
+              .specialization= vet.specialization
+              .experience Опыт: #{vet.experience || 0} лет
+              .bio= vet.bio
+
+              .card-actions
+                a.btn.btn-primary(href=`/vets/${vet.id}`) Подробнее
+                if isAuthenticated && role === 'client'
+                  a.btn.btn-secondary(href="/appointments/new") Записаться
+    else
+      .empty-state
+        h3 Ветеринаров нет
+        p Попробуйте позже или свяжитесь с нами
