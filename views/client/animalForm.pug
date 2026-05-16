@@ -1,0 +1,65 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню клиента
+        a(href="/client/dashboard") Дашборд
+        a(href="/animals" class="active") Мои питомцы
+        a(href="/client/profile") Мой профиль
+
+      .main-panel
+        h1.dashboard-title= isEdit ? 'Редактировать питомца' : 'Добавить питомца'
+
+        if error
+          .flash-message.flash-error
+            span.close-btn ✕
+            = error
+
+        .form-wrapper
+          form(method="POST" enctype="multipart/form-data" action=isEdit ? `/client/animals/${animal.id}` : '/client/animals' id="animalForm")
+            .form-row
+              .form-group
+                label(for="name") Кличка питомца *
+                input#name(type="text" name="name" value=animal?.name required placeholder="Например: Мурзик")
+
+              .form-group
+                label(for="species") Вид животного *
+                select#species(name="species" required)
+                  option(value="") Выберите вид...
+                  option(value="Кошка" selected=(animal?.species === 'Кошка')) Кошка
+                  option(value="Собака" selected=(animal?.species === 'Собака')) Собака
+                  option(value="Птица" selected=(animal?.species === 'Птица')) Птица
+                  option(value="Кролик" selected=(animal?.species === 'Кролик')) Кролик
+                  option(value="Грызун" selected=(animal?.species === 'Грызун')) Грызун
+                  option(value="Другое" selected=(animal?.species === 'Другое')) Другое
+
+            .form-row
+              .form-group
+                label(for="breed") Порода
+                input#breed(type="text" name="breed" value=animal?.breed placeholder="Например: Персидская")
+
+              .form-group
+                label(for="birthDate") Дата рождения
+                input#birthDate(type="date" name="birthDate" value=animal?.birth_date)
+
+            .form-row
+              .form-group
+                label(for="gender") Пол
+                select#gender(name="gender")
+                  option(value="") Не указан
+                  option(value="Самец" selected=(animal?.gender === 'Самец')) Самец
+                  option(value="Самка" selected=(animal?.gender === 'Самка')) Самка
+
+            .form-group
+              label(for="photo") Фото питомца
+              input#photo(type="file" name="photo" accept="image/*")
+              if animal?.photo_url
+                .photo-preview
+                  p Текущее фото:
+                  img(src=animal.photo_url alt=animal.name style="max-width: 200px; border-radius: 4px;")
+
+            .form-actions
+              button.btn.btn-primary(type="submit")= isEdit ? 'Сохранить изменения' : 'Добавить питомца'
+              a.btn.btn-secondary(href="/client/animals") Отмена

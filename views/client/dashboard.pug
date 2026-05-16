@@ -4,31 +4,66 @@ block content
   .container
     .dashboard
       .sidebar
-        h3 Меню
+        h3 Меню клиента
         a(href="/client/dashboard" class="active") Дашборд
-        a(href="/animals") Животные
-        a(href="/appointments") Записи
-        a(href="/client/profile") Профиль
+        a(href="/animals") Мои питомцы
+        a(href="/client/profile") Мой профиль
 
       .main-panel
-        h1.dashboard-title Личный кабинет
+        .panel-header
+          h1.dashboard-title Добро пожаловать, #{fullName || 'Клиент'}!
 
         .stats-grid
           .stat-card
-            h4 Животные
-            .number 0
+            h4 Питомцев
+            .number= animals?.length || 0
           .stat-card
-            h4 Записи
-            .number 0
-          .stat-card
-            h4 Предстоящие приёмы
-            .number 0
+            h4 Записей
+            .number= appointments?.length || 0
 
-        h2 Добро пожаловать, #{fullName || 'Клиент'}!
+        .form-wrapper
+          h3 Мои питомцы
+          if animals && animals.length > 0
+            .animals-grid
+              each animal in animals.slice(0, 3)
+                .animal-card
+                  if animal.photo_url
+                    img(src=animal.photo_url alt=animal.name)
+                  else
+                    img(src="/images/logo.png" alt="Питомец")
+                  .animal-info
+                    h4= animal.name
+                    p= animal.species + (animal.breed ? ` (${animal.breed})` : '')
+                    p.meta= animal.gender || 'Пол не указан'
+
+            .card-actions
+              a.btn.btn-primary(href="/client/animals") Все питомцы →
+          else
+            p Нет добавленных питомцев
+            a.btn.btn-primary(href="/client/animals/new") Добавить первого питомца
+
+        if appointments && appointments.length > 0
+          .form-wrapper
+            h3 Последние записи
+            .table-responsive
+              table
+                thead
+                  tr
+                    th Животное
+                    th Ветеринар
+                    th Услуга
+                    th Статус
+                tbody
+                  each apt in appointments
+                    tr
+                      td Питомец
+                      td= apt.vet_name || '-'
+                      td= apt.service_name || '-'
+                      td
+                        span.badge(class=apt.status === 'confirmed' ? 'badge-success' : 'badge-warning')= apt.status
 
         .form-wrapper
           h3 Быстрые действия
           .card-actions
-            a.btn.btn-primary(href="/animals/new") Добавить животное
-            a.btn.btn-secondary(href="/appointments/new") Записаться на приём
+            a.btn.btn-primary(href="/client/animals/new") + Добавить питомца
             a.btn.btn-secondary(href="/client/profile") Редактировать профиль

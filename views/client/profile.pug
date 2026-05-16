@@ -4,28 +4,35 @@ block content
   .container
     .dashboard
       .sidebar
-        h3 Меню
+        h3 Меню клиента
         a(href="/client/dashboard") Дашборд
-        a(href="/animals") Животные
-        a(href="/appointments") Записи
-        a(href="/client/profile" class="active") Профиль
+        a(href="/animals") Мои питомцы
+        a(href="/client/profile" class="active") Мой профиль
 
       .main-panel
-        h1.dashboard-title Профиль
+        h1.dashboard-title Мой профиль
+
+        if error
+          .flash-message.flash-error
+            span.close-btn ✕
+            = error
 
         .form-wrapper
-          h3 Ваши данные
+          h3 Личные данные
           form(method="POST" action="/client/profile" id="profileForm")
-            .form-group
-              label(for="fullName") ФИО
-              input#fullName(type="text" name="fullName" value=(client?.full_name || '') required)
+            .form-row
+              .form-group
+                label(for="fullName") ФИО *
+                input#fullName(type="text" name="fullName" value=(client?.full_name || '') required)
+
+              .form-group
+                label(for="phone") Телефон
+                input#phone(type="tel" name="phone" value=(client?.phone || '') placeholder="+7 (999) 999-99-99")
 
             .form-group
-              label(for="phone") Телефон
-              input#phone(type="tel" name="phone" value=(client?.phone || '') placeholder="+7 (999) 999-99-99")
+              label Email (не изменяется)
+              input(type="email" disabled value="email@example.com")
 
-            .form-group
-              label(for="email") Email (не изменяется)
-              input#email(type="email" disabled placeholder="Email")
-
-            button(type="submit") Сохранить изменения
+            .form-actions
+              button.btn.btn-primary(type="submit") Сохранить изменения
+              a.btn.btn-secondary(href="/client/dashboard") Отмена

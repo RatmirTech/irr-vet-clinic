@@ -1,0 +1,51 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню клиента
+        a(href="/client/dashboard") Дашборд
+        a(href="/animals" class="active") Мои питомцы
+        a(href="/client/profile") Мой профиль
+
+      .main-panel
+        .panel-header
+          h1.dashboard-title Мои питомцы
+          a.btn.btn-primary(href="/client/animals/new") + Добавить питомца
+
+        if animals && animals.length > 0
+          .animals-grid-large
+            each animal in animals
+              .animal-card-large
+                .animal-image
+                  if animal.photo_url
+                    img(src=animal.photo_url alt=animal.name)
+                  else
+                    img(src="/images/logo.png" alt="Питомец")
+
+                .animal-details
+                  h3= animal.name
+                  .info-row
+                    strong Вид:
+                    |  #{animal.species || 'Не указан'}
+                  .info-row
+                    strong Порода:
+                    |  #{animal.breed || 'Не указана'}
+                  .info-row
+                    strong Пол:
+                    |  #{animal.gender || 'Не указан'}
+                  if animal.birth_date
+                    .info-row
+                      strong Дата рождения:
+                      |  #{animal.birth_date}
+
+                .animal-actions
+                  a.btn.btn-sm.btn-primary(href=`/client/animals/${animal.id}/edit`) Редактировать
+                  form(method="POST" action=`/client/animals/${animal.id}/delete` style="display:inline;")
+                    button.btn.btn-sm.btn-danger(type="submit" onclick="return confirm('Вы уверены?')") Удалить
+        else
+          .empty-state
+            h3 Нет добавленных питомцев
+            p Добавьте первого питомца, чтобы записаться на приём
+            a.btn.btn-primary(href="/client/animals/new") Добавить питомца
