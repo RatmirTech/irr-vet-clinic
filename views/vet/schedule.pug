@@ -4,13 +4,204 @@ block content
   .container
     .dashboard
       .sidebar
-        h3 Меню
+        h3 Меню ветеринара
         a(href="/vet/dashboard") Дашборд
         a(href="/vet/schedule" class="active") Расписание
+        a(href="/vet/medcards") Медкарты
 
       .main-panel
         h1.dashboard-title Расписание приёмов
 
-        .schedule-widget
-          h4 Ближайшие приёмы
-          p Расписание появится здесь
+        .schedule-controls
+          form(method="GET" action="/vet/schedule")
+            .form-group
+              label(for="date") Выберите дату:
+              input#date(type="date" name="date" value=selectedDate)
+              button.btn.btn-primary(type="submit") Показать
+
+        if slots && slots.length > 0
+          .schedule-table
+            table
+              thead
+                tr
+                  th Время
+                  th Статус
+                  th Животное
+                  th Клиент
+                  th Действие
+              tbody
+                each slot in slots
+                  tr(class=!slot.is_available ? 'slot-unavailable' : slot.appointment_id ? 'slot-booked' : '')
+                    td= slot.slot_time
+                    td
+                      if !slot.is_available
+                        span.badge.badge-danger Занято
+                      else if slot.appointment_id
+                        span.badge.badge-warning Зарезервировано
+                      else
+                        span.badge.badge-success Свободно
+                    td= slot.animal_name || '-'
+                    td= slot.client_name || '-'
+                    td
+                      if slot.appointment_id && slot.status
+                        a.btn.btn-sm.btn-info(href=`/vet/appointments/${slot.appointment_id}`) Просмотр
+                      else if !slot.is_available
+                        span.text-muted Недоступно
+                      else
+                        span.text-muted Свободно
+        else
+          .empty-state
+            p Нет расписания на выбранную дату
+
+        a.btn.btn-secondary(href="/vet/dashboard") Назад в кабинет
+
+    style.
+      .schedule-controls {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .form-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .form-group label {
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .form-group input[type="date"] {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: #4CAF50;
+        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+      }
+
+      .schedule-table {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th {
+        background-color: #f5f5f5;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        color: #333;
+        border-bottom: 2px solid #ddd;
+      }
+
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      .slot-unavailable {
+        background-color: #f9f9f9;
+      }
+
+      .slot-booked {
+        background-color: #fffbf0;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .badge-success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+
+      .badge-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+
+      .badge-warning {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+
+      .btn.btn-sm {
+        padding: 6px 12px;
+        background-color: #2E5FA3;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 12px;
+      }
+
+      .btn.btn-sm:hover {
+        background-color: #1e42a3;
+      }
+
+      .text-muted {
+        color: #999;
+        font-size: 13px;
+      }
+
+      .empty-state {
+        background: #f9f9f9;
+        border-radius: 8px;
+        padding: 40px;
+        text-align: center;
+        color: #666;
+        margin-bottom: 24px;
+      }
+
+      .btn-primary {
+        background-color: #4CAF50;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .btn-primary:hover {
+        background-color: #45a049;
+      }
+
+      .btn-secondary {
+        background-color: #999;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .btn-secondary:hover {
+        background-color: #777;
+      }

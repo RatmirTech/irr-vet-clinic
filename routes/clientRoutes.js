@@ -3,6 +3,7 @@ const router = express.Router();
 const { isClient } = require('../middleware/auth');
 const clientController = require('../controllers/clientController');
 const animalController = require('../controllers/animalController');
+const appointmentController = require('../controllers/appointmentController');
 const { uploadAnimalPhoto } = require('../config/multer');
 
 // Client dashboard and profile
@@ -31,5 +32,16 @@ router.post('/animals/:id', isClient, (req, res, next) => {
   });
 }, animalController.postUpdateAnimal);
 router.post('/animals/:id/delete', isClient, animalController.postDeleteAnimal);
+
+// Appointments
+router.get('/appointments', isClient, appointmentController.getAppointments);
+router.get('/appointments/new', isClient, appointmentController.getNewAppointment);
+router.post('/appointments', isClient, appointmentController.postAppointment);
+router.post('/appointments/:id/cancel', isClient, appointmentController.cancelAppointment);
+
+// Medical cards
+const medCardController = require('../controllers/medCardController');
+router.get('/medcards', isClient, medCardController.getClientMedCards);
+router.get('/medcards/:medCardId', isClient, medCardController.getClientMedCardDetail);
 
 module.exports = router;

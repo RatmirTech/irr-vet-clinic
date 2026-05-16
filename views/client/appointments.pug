@@ -1,0 +1,67 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню клиента
+        a(href="/client/dashboard") Дашборд
+        a(href="/client/animals") Мои питомцы
+        a(href="/client/appointments" class="active") Мои записи
+        a(href="/client/profile") Мой профиль
+
+      .main-panel
+        .panel-header
+          h1.dashboard-title Мои записи на приём
+          a.btn.btn-primary(href="/client/appointments/new") + Новая запись
+
+        .filter-tabs
+          a.filter-btn(href="?status=all" class=selectedStatus === 'all' ? 'active' : '') Все
+          a.filter-btn(href="?status=pending" class=selectedStatus === 'pending' ? 'active' : '') Ожидающие
+          a.filter-btn(href="?status=confirmed" class=selectedStatus === 'confirmed' ? 'active' : '') Подтверждённые
+          a.filter-btn(href="?status=completed" class=selectedStatus === 'completed' ? 'active' : '') Завершённые
+          a.filter-btn(href="?status=cancelled" class=selectedStatus === 'cancelled' ? 'active' : '') Отменённые
+
+        if appointments && appointments.length > 0
+          .table-responsive
+            table
+              thead
+                tr
+                  th Дата и время
+                  th Ветеринар
+                  th Животное
+                  th Услуга
+                  th Статус
+                  th Действия
+              tbody
+                each apt in appointments
+                  tr
+                    td
+                      if apt.slot_date && apt.slot_time
+                        | #{apt.slot_date} #{apt.slot_time}
+                      else
+                        | -
+                    td= apt.vet_name || '-'
+                    td= apt.animal_name || '-'
+                    td= apt.service_name || '-'
+                    td
+                      span.badge(class=`badge-${apt.status === 'confirmed' ? 'success' : apt.status === 'pending' ? 'warning' : apt.status === 'cancelled' ? 'danger' : 'info'}`)
+                        if apt.status === 'pending'
+                          | Ожидание
+                        else if apt.status === 'confirmed'
+                          | Подтверждена
+                        else if apt.status === 'completed'
+                          | Завершена
+                        else if apt.status === 'cancelled'
+                          | Отменена
+                        else
+                          = apt.status
+                    td
+                      if apt.status === 'pending' || apt.status === 'confirmed'
+                        form(method="POST" action=`/client/appointments/${apt.id}/cancel` style="display:inline;")
+                          button.btn.btn-sm.btn-danger(type="submit" onclick="return confirm('Отменить эту запись?')") Отменить
+        else
+          .empty-state
+            h3 Нет записей
+            p
+              a(href="/client/appointments/new") Запишитесь на приём

@@ -65,6 +65,28 @@ const ScheduleModel = {
     );
     return result.rowCount;
   },
+
+  getVetSlotsByDate: async (vetId, slotDate) => {
+    const result = await db.query(
+      `SELECT
+        ss.id,
+        ss.slot_date,
+        ss.slot_time,
+        ss.is_available,
+        a.id as appointment_id,
+        a.status,
+        an.name as animal_name,
+        c.full_name as client_name
+      FROM schedule_slots ss
+      LEFT JOIN appointments a ON ss.id = a.slot_id
+      LEFT JOIN animals an ON a.animal_id = an.id
+      LEFT JOIN clients c ON a.client_id = c.id
+      WHERE ss.vet_id = $1 AND ss.slot_date = $2
+      ORDER BY ss.slot_time`,
+      [vetId, slotDate]
+    );
+    return result.rows;
+  }
 };
 
 module.exports = ScheduleModel;

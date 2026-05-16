@@ -1,0 +1,139 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню ветеринара
+        a(href="/vet/dashboard") Дашборд
+        a(href="/vet/schedule" class="active") Расписание
+        a(href="/vet/profile") Мой профиль
+
+      .main-panel
+        .panel-header
+          h1.dashboard-title Детали приёма
+
+        .appointment-details-card
+          .detail-row
+            .detail-label Клиент:
+            .detail-value= appointment.client_name || '-'
+
+          .detail-row
+            .detail-label Питомец:
+            .detail-value= appointment.animal_name || '-'
+
+          .detail-row
+            .detail-label Услуга:
+            .detail-value= appointment.service_name || '-'
+
+          .detail-row
+            .detail-label Дата и время:
+            .detail-value
+              if appointment.slot_date && appointment.slot_time
+                | #{appointment.slot_date} #{appointment.slot_time}
+              else
+                | -
+
+          .detail-row
+            .detail-label Статус:
+            .detail-value
+              span.badge(class=`badge-${appointment.status === 'confirmed' ? 'success' : appointment.status === 'pending' ? 'warning' : appointment.status === 'cancelled' ? 'danger' : 'info'}`)
+                if appointment.status === 'pending'
+                  | Ожидание
+                else if appointment.status === 'confirmed'
+                  | Подтверждена
+                else if appointment.status === 'completed'
+                  | Завершена
+                else if appointment.status === 'cancelled'
+                  | Отменена
+                else
+                  = appointment.status
+
+          if appointment.notes
+            .detail-row
+              .detail-label Заметки:
+              .detail-value= appointment.notes
+
+        .action-buttons
+          if appointment.status === 'pending'
+            form(method="POST" action=`/vet/appointments/${appointment.id}/confirm` style="display:inline;")
+              button.btn.btn-primary(type="submit") Подтвердить
+
+          if appointment.status === 'pending' || appointment.status === 'confirmed'
+            form(method="POST" action=`/client/appointments/${appointment.id}/cancel` style="display:inline;")
+              button.btn.btn-danger(type="submit" onclick="return confirm('Отменить эту запись?')") Отменить
+
+          a.btn.btn-secondary(href="/vet/schedule") Назад к расписанию
+
+    style.
+      .appointment-details-card {
+        background: white;
+        border-radius: 8px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .detail-row {
+        display: flex;
+        padding: 16px 0;
+        border-bottom: 1px solid #eee;
+      }
+
+      .detail-row:last-child {
+        border-bottom: none;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        min-width: 150px;
+        color: #666;
+      }
+
+      .detail-value {
+        flex: 1;
+        color: #333;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .action-buttons .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+      }
+
+      .btn-primary {
+        background-color: #4CAF50;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background-color: #45a049;
+      }
+
+      .btn-danger {
+        background-color: #f44336;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background-color: #da190b;
+      }
+
+      .btn-secondary {
+        background-color: #999;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background-color: #777;
+      }

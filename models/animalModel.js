@@ -40,6 +40,19 @@ const AnimalModel = {
     const result = await db.query('SELECT * FROM animals ORDER BY created_at DESC');
     return result.rows;
   },
+
+  getAll: async () => {
+    const result = await db.query('SELECT * FROM animals ORDER BY created_at DESC');
+    return result.rows;
+  },
+
+  getAnimalIdFromMedCard: async (medCardId) => {
+    const result = await db.query(
+      'SELECT animal_id FROM med_cards WHERE id = $1',
+      [medCardId]
+    );
+    return result.rows[0]?.animal_id;
+  },
 };
 
 module.exports = AnimalModel;

@@ -1,0 +1,122 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню клиента
+        a(href="/client/dashboard") Дашборд
+        a(href="/client/animals") Мои питомцы
+        a(href="/client/appointments" class="active") Мои записи
+        a(href="/client/profile") Мой профиль
+
+      .main-panel
+        h1.dashboard-title Новая запись на приём
+
+        .form-wrapper
+          form(method="POST" action="/client/appointments" id="appointmentForm")
+            h3 Шаг 1: Выберите ветеринара и дату
+
+            .form-row
+              .form-group
+                label(for="vetId") Ветеринар *
+                select#vetId(name="vetId" required)
+                  option(value="") Выберите ветеринара...
+                  each vet in vets
+                    option(value=vet.id)= vet.full_name + ' (' + vet.specialization + ')'
+
+              .form-group
+                label(for="appointmentDate") Дата *
+                input#appointmentDate(type="date" required)
+
+            h3 Шаг 2: Выберите время приёма
+
+            #slotsContainer.slots-container
+              p Выберите дату, чтобы посмотреть доступное время
+
+            h3 Шаг 3: Выберите питомца и услугу
+
+            .form-row
+              .form-group
+                label(for="animalId") Мой питомец *
+                select#animalId(name="animalId" required)
+                  option(value="") Выберите питомца...
+                  each animal in animals
+                    option(value=animal.id)= animal.name + ' (' + animal.species + ')'
+
+              .form-group
+                label(for="serviceId") Услуга
+                select#serviceId(name="serviceId")
+                  option(value="") Выберите услугу...
+                  each service in services
+                    option(value=service.id)= service.name + ' (₽' + service.price + ')'
+
+            .form-group
+              label(for="notes") Заметки (опционально)
+              textarea#notes(name="notes" placeholder="Добавьте информацию для врача...")
+
+            input#slotId(type="hidden" name="slotId" required)
+
+            .form-actions
+              button.btn.btn-primary(type="submit") Записаться на приём
+              a.btn.btn-secondary(href="/client/appointments") Отмена
+
+    script.
+      document.addEventListener('DOMContentLoaded', function() {
+        const vetSelect = document.getElementById('vetId');
+        const dateInput = document.getElementById('appointmentDate');
+        const slotsContainer = document.getElementById('slotsContainer');
+        const slotInput = document.getElementById('slotId');
+
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('min', today);
+
+        function loadSlots() {
+          const vetId = vetSelect.value;
+          const date = dateInput.value;
+
+          if (!vetId || !date) {
+            slotsContainer.innerHTML = '<p>Выберите дату, чтобы посмотреть доступное время</p>';
+            slotInput.value = '';
+            return;
+          }
+
+          fetch(`/api/slots?vetId=${vetId}&date=${date}`)
+            .then(response => response.json())
+            .then(slots => {
+              if (slots.length === 0) {
+                slotsContainer.innerHTML = '<p>Нет доступных слотов на эту дату</p>';
+                slotInput.value = '';
+                return;
+              }
+
+              let html = '<div class="slots-grid">';
+              slots.forEach(slot => {
+                html += `
+                  <div class="slot-option">
+                    <input type="radio" id="slot-${slot.id}" name="temp_slot" value="${slot.id}" data-slot-id="${slot.id}">
+                    <label for="slot-${slot.id}">${slot.slot_time}</label>
+                  </div>
+                `;
+              });
+              html += '</div>';
+
+              slotsContainer.innerHTML = html;
+
+              // Add event listeners to radio buttons
+              document.querySelectorAll('input[name="temp_slot"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                  slotInput.value = this.getAttribute('data-slot-id');
+                });
+              });
+            })
+            .catch(err => {
+              console.error('Error loading slots:', err);
+              slotsContainer.innerHTML = '<p>Ошибка при загрузке слотов</p>';
+            });
+        }
+
+        vetSelect.addEventListener('change', loadSlots);
+        dateInput.addEventListener('change', loadSlots);
+      });

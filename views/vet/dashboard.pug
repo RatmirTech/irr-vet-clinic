@@ -4,23 +4,139 @@ block content
   .container
     .dashboard
       .sidebar
-        h3 Меню
+        h3 Меню ветеринара
         a(href="/vet/dashboard" class="active") Дашборд
         a(href="/vet/schedule") Расписание
+        a(href="/vet/medcards") Медкарты
 
       .main-panel
         h1.dashboard-title Кабинет ветеринара
 
-        .stats-grid
-          .stat-card
-            h4 Приёмы сегодня
-            .number 0
-          .stat-card
-            h4 Свободные слоты
-            .number 0
-          .stat-card
-            h4 Клиентов
-            .number 0
+        if upcomingAppointments && upcomingAppointments.length > 0
+          .appointments-section
+            h2 Ближайшие приёмы
 
-        h2 Добро пожаловать!
-        p Сведения о сегодняшних приёмах появятся здесь.
+            .appointments-list
+              each apt in upcomingAppointments
+                .appointment-card
+                  .apt-date= apt.slot_date
+                  .apt-time= apt.slot_time
+                  .apt-details
+                    p
+                      strong= apt.animal_name
+                    p.client= apt.client_name
+                  .apt-actions
+                    a.btn.btn-sm(href=`/vet/appointments/${apt.appointment_id}`) Просмотр
+        else
+          .empty-state
+            h2 Добро пожаловать!
+            p На текущий момент запланированных приёмов нет.
+
+        a.btn.btn-primary(href="/vet/schedule") Посмотреть расписание
+
+    style.
+      .appointments-section {
+        margin-bottom: 24px;
+      }
+
+      .appointments-section h2 {
+        margin-top: 0;
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 16px;
+      }
+
+      .appointments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .appointment-card {
+        background: white;
+        border-radius: 8px;
+        padding: 16px;
+        display: grid;
+        grid-template-columns: 100px 100px 1fr auto;
+        gap: 16px;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .apt-date {
+        font-weight: 600;
+        color: #2E5FA3;
+        font-size: 14px;
+      }
+
+      .apt-time {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .apt-details p {
+        margin: 0;
+        font-size: 14px;
+      }
+
+      .apt-details p:first-child {
+        font-weight: 600;
+      }
+
+      .apt-details .client {
+        color: #666;
+        font-size: 13px;
+      }
+
+      .apt-actions {
+        text-align: right;
+      }
+
+      .btn.btn-sm {
+        padding: 6px 12px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 12px;
+      }
+
+      .btn.btn-sm:hover {
+        background-color: #45a049;
+      }
+
+      .btn-primary {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .btn-primary:hover {
+        background-color: #45a049;
+      }
+
+      .empty-state {
+        background: #f9f9f9;
+        border-radius: 8px;
+        padding: 40px 20px;
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .empty-state h2 {
+        margin: 0 0 12px 0;
+        color: #666;
+      }
+
+      .empty-state p {
+        margin: 0;
+        color: #999;
+      }

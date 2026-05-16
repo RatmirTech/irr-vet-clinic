@@ -1,0 +1,222 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню ветеринара
+        a(href="/vet/dashboard") Дашборд
+        a(href="/vet/schedule") Расписание
+        a(href="/vet/medcards" class="active") Медкарты
+
+      .main-panel
+        .panel-header
+          h1.dashboard-title Медицинская карта - #{medCard.animal_name}
+          a.btn.btn-primary(href=`/vet/medcards/${medCard.animal_id}/visits/new`) + Новый приём
+
+        .medcard-header
+          if medCard.species
+            .info-row
+              span.label Вид:
+              span.value= medCard.species
+
+          if medCard.breed
+            .info-row
+              span.label Порода:
+              span.value= medCard.breed
+
+          .info-row
+            span.label Владелец:
+            span.value= medCard.client_name
+
+        if visits && visits.length > 0
+          .visits-timeline
+            each visit in visits
+              .visit-entry
+                .visit-date= visit.visit_date
+                .visit-info
+                  .visit-header
+                    span.vet-name Врач: #{visit.vet_name}
+
+                  if visit.diagnosis
+                    .visit-field
+                      .field-label Диагноз:
+                      .field-value= visit.diagnosis
+
+                  if visit.treatment
+                    .visit-field
+                      .field-label Лечение:
+                      .field-value= visit.treatment
+
+                  if visit.prescriptions
+                    .visit-field
+                      .field-label Назначения:
+                      .field-value= visit.prescriptions
+
+                  if visit.notes
+                    .visit-field
+                      .field-label Заметки:
+                      .field-value= visit.notes
+
+                .visit-actions
+                  a.btn.btn-sm.btn-secondary(href=`/vet/visits/${visit.id}/edit`) Редактировать
+                  form(method="POST" action=`/vet/visits/${visit.id}/delete` style="display:inline;")
+                    button.btn.btn-sm.btn-danger(type="submit" onclick="return confirm('Удалить этот приём?')") Удалить
+        else
+          .empty-state
+            p Приёмы отсутствуют
+
+        a.btn.btn-secondary(href="/vet/medcards") Назад к медкартам
+
+    style.
+      .medcard-header {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .info-row {
+        display: flex;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+      }
+
+      .info-row:last-child {
+        border-bottom: none;
+      }
+
+      .info-row .label {
+        font-weight: 600;
+        min-width: 120px;
+        color: #666;
+      }
+
+      .info-row .value {
+        flex: 1;
+        color: #333;
+      }
+
+      .visits-timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        margin-bottom: 24px;
+      }
+
+      .visit-entry {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        border-left: 4px solid #4CAF50;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .visit-date {
+        font-weight: 600;
+        color: #2E5FA3;
+        margin-bottom: 12px;
+        font-size: 16px;
+      }
+
+      .visit-header {
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .vet-name {
+        color: #666;
+        font-size: 14px;
+      }
+
+      .visit-field {
+        margin: 12px 0;
+      }
+
+      .field-label {
+        font-weight: 600;
+        color: #666;
+        font-size: 13px;
+        text-transform: uppercase;
+      }
+
+      .field-value {
+        color: #333;
+        margin-top: 4px;
+        line-height: 1.5;
+      }
+
+      .visit-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+        padding-top: 12px;
+        border-top: 1px solid #eee;
+      }
+
+      .btn.btn-sm {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      .btn-secondary {
+        background-color: #999;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .btn-secondary:hover {
+        background-color: #777;
+      }
+
+      .btn-danger {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .btn-danger:hover {
+        background-color: #da190b;
+      }
+
+      .empty-state {
+        background: #f9f9f9;
+        border-radius: 8px;
+        padding: 40px;
+        text-align: center;
+        color: #666;
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+
+      .panel-header h1 {
+        margin: 0;
+      }
+
+      .btn-primary {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .btn-primary:hover {
+        background-color: #45a049;
+      }

@@ -1,0 +1,142 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню ветеринара
+        a(href="/vet/dashboard") Дашборд
+        a(href="/vet/schedule") Расписание
+        a(href="/vet/medcards" class="active") Медкарты
+
+      .main-panel
+        h1.dashboard-title=isEdit ? 'Редактирование приёма' : 'Новый приём'
+
+        .form-wrapper
+          form(method="POST" action=isEdit ? `/vet/visits/${visit.id}` : `/vet/medcards/${medCard.animal_id}/visits`)
+            .form-group
+              label Животное
+              .form-value= medCard.animal_name
+
+            .form-group
+              label Владелец
+              .form-value= medCard.client_name
+
+            .form-row
+              .form-group
+                label(for="visit_date") Дата приёма *
+                input#visit_date(type="date" name="visit_date" required value=visit ? visit.visit_date : today)
+
+            .form-group
+              label(for="diagnosis") Диагноз
+              textarea#diagnosis(name="diagnosis" placeholder="Введите диагноз...")= visit ? visit.diagnosis : ''
+
+            .form-group
+              label(for="treatment") Лечение
+              textarea#treatment(name="treatment" placeholder="Опишите назначенное лечение...")= visit ? visit.treatment : ''
+
+            .form-group
+              label(for="prescriptions") Назначения
+              textarea#prescriptions(name="prescriptions" placeholder="Введите назначения и рецепты...")= visit ? visit.prescriptions : ''
+
+            .form-group
+              label(for="notes") Заметки
+              textarea#notes(name="notes" placeholder="Дополнительные заметки...")= visit ? visit.notes : ''
+
+            if visit && visit.appointment_id
+              input(type="hidden" name="appointment_id" value=visit.appointment_id)
+
+            .form-actions
+              button.btn.btn-primary(type="submit")=isEdit ? 'Сохранить изменения' : 'Создать приём'
+              a.btn.btn-secondary(href=isEdit ? `/vet/medcards/${medCard.animal_id}` : '/vet/medcards') Отмена
+
+    style.
+      .form-wrapper {
+        background: white;
+        border-radius: 8px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #333;
+      }
+
+      .form-group input[type="text"],
+      .form-group input[type="date"],
+      .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 14px;
+      }
+
+      .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+      }
+
+      .form-group input:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #4CAF50;
+        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+      }
+
+      .form-value {
+        padding: 10px;
+        background: #f5f5f5;
+        border-radius: 4px;
+        color: #333;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid #eee;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .btn-primary {
+        background-color: #4CAF50;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background-color: #45a049;
+      }
+
+      .btn-secondary {
+        background-color: #999;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background-color: #777;
+      }
