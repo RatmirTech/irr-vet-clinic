@@ -77,6 +77,7 @@ const appointmentController = {
         notes || null
       );
 
+      req.flash('success', 'Запись на приём успешно создана!');
       res.redirect('/client/appointments');
     } catch (err) {
       console.error(err);
@@ -100,6 +101,7 @@ const appointmentController = {
 
       await AppointmentModel.cancel(id);
 
+      req.flash('success', 'Запись успешно отменена');
       res.redirect('/client/appointments');
     } catch (err) {
       console.error(err);
@@ -122,6 +124,7 @@ const appointmentController = {
 
       await AppointmentModel.updateStatus(id, 'confirmed');
 
+      req.flash('success', 'Запись успешно подтверждена');
       res.redirect('/vet/dashboard');
     } catch (err) {
       console.error(err);

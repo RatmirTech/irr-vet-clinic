@@ -1,17 +1,18 @@
 function validateForm(formId) {
-  const form = document.getElementById(formId);
+  const form = typeof formId === 'string' ? document.getElementById(formId) : formId;
   if (!form) return true;
 
+  clearAllErrors(form);
   const inputs = form.querySelectorAll('input[required], textarea[required], select[required]');
   let isValid = true;
 
   inputs.forEach((input) => {
     const value = input.value.trim();
+
     if (!value) {
       showError(input, 'Это поле обязательно');
       isValid = false;
-    } else {
-      clearError(input);
+      return;
     }
 
     if (input.type === 'email' && value) {
@@ -19,8 +20,6 @@ function validateForm(formId) {
       if (!emailRegex.test(value)) {
         showError(input, 'Введите корректный email');
         isValid = false;
-      } else {
-        clearError(input);
       }
     }
 
@@ -28,8 +27,6 @@ function validateForm(formId) {
       if (value.length < 6) {
         showError(input, 'Пароль должен быть не менее 6 символов');
         isValid = false;
-      } else {
-        clearError(input);
       }
     }
 
@@ -38,8 +35,16 @@ function validateForm(formId) {
       if (!phoneRegex.test(value)) {
         showError(input, 'Введите корректный номер телефона');
         isValid = false;
-      } else {
-        clearError(input);
+      }
+    }
+
+    if (input.type === 'date' && input.name === 'appointmentDate' && value) {
+      const selectedDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        showError(input, 'Дата должна быть сегодня или позже');
+        isValid = false;
       }
     }
   });
@@ -66,11 +71,20 @@ function clearError(field) {
   }
 }
 
-// Form submission validation
-$(document).ready(function () {
-  $('form').on('submit', function (e) {
-    if (!validateForm(this.id)) {
-      e.preventDefault();
-    }
+function clearAllErrors(form) {
+  const errorMessages = form.querySelectorAll('.error-message');
+  errorMessages.forEach(msg => msg.remove());
+  const errorFields = form.querySelectorAll('.error');
+  errorFields.forEach(field => field.classList.remove('error'));
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const forms = document.querySelectorAll('form[data-validate="true"]');
+  forms.forEach(form => {
+    form.addEventListener('submit', function (e) {
+      if (!validateForm(this)) {
+        e.preventDefault();
+      }
+    });
   });
 });

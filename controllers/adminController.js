@@ -289,14 +289,36 @@ const adminController = {
 
   getClients: async (req, res) => {
     try {
-      const clients = await ClientModel.getAll();
+      const page = parseInt(req.query.page) || 1;
+      const limit = 20;
+      const offset = (page - 1) * limit;
+
+      const result = await db.query(
+        `SELECT c.*, u.email,
+           (SELECT COUNT(*) FROM animals WHERE client_id = c.id) as animal_count
+         FROM clients c
+         JOIN users u ON c.user_id = u.id
+         ORDER BY c.created_at DESC
+         LIMIT $1 OFFSET $2`,
+        [limit, offset]
+      );
+
+      const totalResult = await db.query('SELECT COUNT(*) as count FROM clients');
+      const totalPages = Math.ceil(totalResult.rows[0].count / limit);
+
       res.render('admin/clients', {
         pageTitle: 'Управление клиентами',
-        clients,
+        clients: result.rows,
+        pagination: {
+          page,
+          totalPages,
+          hasPrev: page > 1,
+          hasNext: page < totalPages
+        }
       });
     } catch (err) {
       console.error(err);
-      res.status(500).send('Ошибка при загрузке списка клиентов');
+      res.status(500).render('error', { error: 'Ошибка при загрузке списка клиентов' });
     }
   },
 };

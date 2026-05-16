@@ -65,7 +65,8 @@ const animalController = {
         photoUrl
       );
 
-      res.redirect('/animals');
+      req.flash('success', `Питомец "${name}" успешно добавлен!`);
+      res.redirect('/client/animals');
     } catch (err) {
       console.error(err);
       res.status(500).render('client/animalForm', {
@@ -128,7 +129,8 @@ const animalController = {
         photoUrl,
       });
 
-      res.redirect('/animals');
+      req.flash('success', 'Информация о питомце обновлена');
+      res.redirect('/client/animals');
     } catch (err) {
       console.error(err);
       res.status(500).send('Ошибка при обновлении питомца');
@@ -149,9 +151,11 @@ const animalController = {
         return res.status(403).render('errors/403');
       }
 
+      const animalName = animal.name;
       await AnimalModel.delete(id);
 
-      res.redirect('/animals');
+      req.flash('success', `Питомец "${animalName}" удалён`);
+      res.redirect('/client/animals');
     } catch (err) {
       console.error(err);
       res.status(500).send('Ошибка при удалении питомца');

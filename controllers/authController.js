@@ -52,6 +52,7 @@ const authController = {
       };
 
       const redirectUrl = redirects[user.role] || '/';
+      req.flash('success', `Добро пожаловать, ${user.email}!`);
       res.redirect(redirectUrl);
     } catch (err) {
       console.error(err);
@@ -108,6 +109,7 @@ const authController = {
       req.session.role = 'client';
       req.session.fullName = fullName;
 
+      req.flash('success', 'Регистрация успешна! Добро пожаловать!');
       res.redirect('/client/dashboard');
     } catch (err) {
       console.error(err);
@@ -124,6 +126,7 @@ const authController = {
         console.error(err);
         return res.status(500).send('Ошибка при выходе');
       }
+      req.flash('success', 'Вы успешно вышли из системы');
       res.redirect('/');
     });
   },

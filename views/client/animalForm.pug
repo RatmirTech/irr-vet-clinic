@@ -18,7 +18,7 @@ block content
             = error
 
         .form-wrapper
-          form(method="POST" enctype="multipart/form-data" action=isEdit ? `/client/animals/${animal.id}` : '/client/animals' id="animalForm")
+          form(method="POST" enctype="multipart/form-data" action=isEdit ? `/client/animals/${animal.id}` : '/client/animals' id="animalForm" data-validate="true")
             .form-row
               .form-group
                 label(for="name") Кличка питомца *

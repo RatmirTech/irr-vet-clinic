@@ -20,8 +20,100 @@ html(lang="ru")
           .nav-menu#nav-menu
             include ../layout/nav.pug
 
+    if flash && (flash.success || flash.error || flash.warning || flash.info)
+      .flash-container
+        if flash.success
+          each msg in flash.success
+            .alert.alert-success
+              span= msg
+              button.alert-close(onclick="this.parentElement.style.display='none';") ×
+        if flash.error
+          each msg in flash.error
+            .alert.alert-error
+              span= msg
+              button.alert-close(onclick="this.parentElement.style.display='none';") ×
+        if flash.warning
+          each msg in flash.warning
+            .alert.alert-warning
+              span= msg
+              button.alert-close(onclick="this.parentElement.style.display='none';") ×
+        if flash.info
+          each msg in flash.info
+            .alert.alert-info
+              span= msg
+              button.alert-close(onclick="this.parentElement.style.display='none';") ×
+
     main.main-content
       block content
+
+    style.
+      .flash-container {
+        position: fixed;
+        top: 70px;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        padding: 12px;
+      }
+
+      .alert {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateY(-20px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+
+      .alert-info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+
+      .alert-close {
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: inherit;
+        padding: 0;
+        margin-left: 12px;
+      }
+
+      .alert-close:hover {
+        opacity: 0.7;
+      }
 
     footer.footer
       include ../layout/footer.pug

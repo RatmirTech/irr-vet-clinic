@@ -1,28 +1,61 @@
-const assert = require('assert');
+const request = require('supertest');
+const { expect } = require('chai');
+const app = require('../server');
 
-describe('Authentication', function () {
-  describe('Login', function () {
-    it('should validate email format', function () {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      assert.ok(emailRegex.test('user@example.com'));
-      assert.ok(!emailRegex.test('invalid-email'));
+describe('Authentication', () => {
+  const testUser = {
+    fullName: 'Test User',
+    email: 'testuser' + Date.now() + '@example.com',
+    phone: '79999999999',
+    password: 'TestPassword123'
+  };
+
+  describe('POST /auth/register', () => {
+    it('should register a new user with valid data', (done) => {
+      request(app)
+        .post('/auth/register')
+        .send(testUser)
+        .expect(302)
+        .end((err, res) => {
+          if (err) return done(err);
+          expect(res.headers.location).to.include('/client/dashboard');
+          done();
+        });
     });
 
-    it('should validate password length', function () {
+    it('should validate email format on client side', () => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      expect(emailRegex.test('user@example.com')).to.be.true;
+      expect(emailRegex.test('invalid-email')).to.be.false;
+    });
+
+    it('should validate password length', () => {
       const password = 'password123';
-      assert.ok(password.length >= 6);
+      expect(password.length).to.be.at.least(6);
     });
   });
 
-  describe('Register', function () {
-    it('should require email', function () {
-      const email = '';
-      assert.strictEqual(email.length, 0);
+  describe('POST /auth/login', () => {
+    it('should login with correct credentials', (done) => {
+      request(app)
+        .post('/auth/login')
+        .send({
+          email: testUser.email,
+          password: testUser.password
+        })
+        .expect(302)
+        .end(done);
     });
 
-    it('should require password', function () {
-      const password = '';
-      assert.strictEqual(password.length, 0);
+    it('should fail with incorrect password', (done) => {
+      request(app)
+        .post('/auth/login')
+        .send({
+          email: testUser.email,
+          password: 'WrongPassword123'
+        })
+        .expect(302)
+        .end(done);
     });
   });
 });

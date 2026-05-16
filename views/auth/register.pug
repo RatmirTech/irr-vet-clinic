@@ -10,7 +10,7 @@ block content
           span.close-btn ✕
           = error
 
-      form(method="POST" action="/auth/register" id="registerForm")
+      form(method="POST" action="/auth/register" id="registerForm" data-validate="true")
         .form-group
           label(for="fullName") ФИО
           input#fullName(type="text" name="fullName" required placeholder="Ваше полное имя")

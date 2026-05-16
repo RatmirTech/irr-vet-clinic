@@ -23,17 +23,57 @@ block content
                   th Email
                   th Телефон
                   th Животных
-                  th Статус
+                  th Дата регистрации
               tbody
                 each client in clients
                   tr
                     td= client.full_name
-                    td= client.user_id ? 'client@email.com' : '-'
+                    td= client.email || '-'
                     td= client.phone || '-'
-                    td 0
-                    td
-                      span.badge.badge-success Активен
+                    td= client.animal_count || 0
+                    td= client.created_at ? new Date(client.created_at).toLocaleDateString('ru-RU') : '-'
+
+          if pagination
+            .pagination
+              if pagination.hasPrev
+                a.btn.btn-secondary(href=`/admin/clients?page=${pagination.page - 1}`) ← Назад
+
+              span.page-info
+                | Страница #{pagination.page} из #{pagination.totalPages}
+
+              if pagination.hasNext
+                a.btn.btn-secondary(href=`/admin/clients?page=${pagination.page + 1}`) Вперед →
         else
           .empty-state
             h3 Клиентов нет
             p Когда клиенты зарегистрируются, они появятся здесь
+
+    style.
+      .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+        margin-top: 24px;
+        padding: 20px;
+      }
+
+      .page-info {
+        font-weight: 600;
+        color: #666;
+      }
+
+      .btn.btn-secondary {
+        background-color: #999;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .btn.btn-secondary:hover {
+        background-color: #777;
+      }
