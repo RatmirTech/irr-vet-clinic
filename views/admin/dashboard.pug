@@ -1,0 +1,32 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню
+        a(href="/admin/dashboard" class="active") Дашборд
+        a(href="/admin/vets") Ветеринары
+        a(href="/admin/services") Услуги
+        a(href="/admin/schedule") Расписание
+        a(href="/admin/clients") Клиенты
+
+      .main-panel
+        h1.dashboard-title Панель администратора
+
+        .stats-grid
+          .stat-card
+            h4 Ветеринаров
+            .number 0
+          .stat-card
+            h4 Клиентов
+            .number 0
+          .stat-card
+            h4 Записей
+            .number 0
+          .stat-card
+            h4 Услуг
+            .number 0
+
+        h2 Добро пожаловать в панель администратора!
+        p Управляйте клиникой через меню слева.

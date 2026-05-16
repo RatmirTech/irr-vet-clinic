@@ -10,12 +10,14 @@ if isAuthenticated
     when 'vet'
       a(href="/vet/dashboard") Мой кабинет
       a(href="/vet/schedule") Расписание
+      a(href="/") Главная
       a(href="/auth/logout") Выход
     when 'client'
       a(href="/client/dashboard") Мой кабинет
       a(href="/animals") Животные
       a(href="/appointments") Записи
       a(href="/client/profile") Профиль
+      a(href="/") Главная
       a(href="/auth/logout") Выход
 else
   a(href="/") Главная

@@ -1,0 +1,34 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню
+        a(href="/client/dashboard" class="active") Дашборд
+        a(href="/animals") Животные
+        a(href="/appointments") Записи
+        a(href="/client/profile") Профиль
+
+      .main-panel
+        h1.dashboard-title Личный кабинет
+
+        .stats-grid
+          .stat-card
+            h4 Животные
+            .number 0
+          .stat-card
+            h4 Записи
+            .number 0
+          .stat-card
+            h4 Предстоящие приёмы
+            .number 0
+
+        h2 Добро пожаловать, #{fullName || 'Клиент'}!
+
+        .form-wrapper
+          h3 Быстрые действия
+          .card-actions
+            a.btn.btn-primary(href="/animals/new") Добавить животное
+            a.btn.btn-secondary(href="/appointments/new") Записаться на приём
+            a.btn.btn-secondary(href="/client/profile") Редактировать профиль

@@ -1,0 +1,28 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню
+        a(href="/admin/dashboard") Дашборд
+        a(href="/admin/vets") Ветеринары
+        a(href="/admin/services" class="active") Услуги
+        a(href="/admin/schedule") Расписание
+        a(href="/admin/clients") Клиенты
+
+      .main-panel
+        h1.dashboard-title Управление услугами
+        a.btn.btn-primary(href="/admin/services/new") + Добавить услугу
+
+        .table-responsive
+          table
+            thead
+              tr
+                th Название
+                th Описание
+                th Цена
+                th Действия
+            tbody
+              tr
+                td colspan="4" Услуг нет

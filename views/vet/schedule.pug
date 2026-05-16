@@ -1,0 +1,16 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню
+        a(href="/vet/dashboard") Дашборд
+        a(href="/vet/schedule" class="active") Расписание
+
+      .main-panel
+        h1.dashboard-title Расписание приёмов
+
+        .schedule-widget
+          h4 Ближайшие приёмы
+          p Расписание появится здесь

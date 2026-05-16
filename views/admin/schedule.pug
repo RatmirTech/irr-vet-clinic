@@ -1,0 +1,29 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню
+        a(href="/admin/dashboard") Дашборд
+        a(href="/admin/vets") Ветеринары
+        a(href="/admin/services") Услуги
+        a(href="/admin/schedule" class="active") Расписание
+        a(href="/admin/clients") Клиенты
+
+      .main-panel
+        h1.dashboard-title Управление расписанием
+        a.btn.btn-primary(href="/admin/schedule/generate") + Сгенерировать слоты
+
+        .table-responsive
+          table
+            thead
+              tr
+                th Ветеринар
+                th Дата
+                th Время
+                th Статус
+                th Действия
+            tbody
+              tr
+                td colspan="5" Расписание отсутствует

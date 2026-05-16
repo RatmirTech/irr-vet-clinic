@@ -1,0 +1,26 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню
+        a(href="/vet/dashboard" class="active") Дашборд
+        a(href="/vet/schedule") Расписание
+
+      .main-panel
+        h1.dashboard-title Кабинет ветеринара
+
+        .stats-grid
+          .stat-card
+            h4 Приёмы сегодня
+            .number 0
+          .stat-card
+            h4 Свободные слоты
+            .number 0
+          .stat-card
+            h4 Клиентов
+            .number 0
+
+        h2 Добро пожаловать!
+        p Сведения о сегодняшних приёмах появятся здесь.

@@ -1,0 +1,31 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню
+        a(href="/client/dashboard") Дашборд
+        a(href="/animals") Животные
+        a(href="/appointments") Записи
+        a(href="/client/profile" class="active") Профиль
+
+      .main-panel
+        h1.dashboard-title Профиль
+
+        .form-wrapper
+          h3 Ваши данные
+          form(method="POST" action="/client/profile" id="profileForm")
+            .form-group
+              label(for="fullName") ФИО
+              input#fullName(type="text" name="fullName" value=(client?.full_name || '') required)
+
+            .form-group
+              label(for="phone") Телефон
+              input#phone(type="tel" name="phone" value=(client?.phone || '') placeholder="+7 (999) 999-99-99")
+
+            .form-group
+              label(for="email") Email (не изменяется)
+              input#email(type="email" disabled placeholder="Email")
+
+            button(type="submit") Сохранить изменения

@@ -5,22 +5,44 @@ block content
     .hero
       h1 Добро пожаловать в ветеринарную клинику
       p Лучший уход для ваших питомцев
-      if !isAuthenticated
-        a.btn.btn-primary(href="/auth/login") Записаться на приём
-        a.btn.btn-secondary(href="/vets") Наши ветеринары
-
-    .services-preview
-      h2 Наши услуги
-      .cards-grid
-        - for (let i = 0; i < 3; i++)
-          .card
-            .card-image
-              img(src="/images/logo.png" alt="Услуга")
-            .card-content
-              h3 Услуга
-              p Описание услуги
+      if isAuthenticated
+        if role === 'client'
+          a.btn.btn-primary(href="/client/dashboard") Мой кабинет
+          a.btn.btn-secondary(href="/appointments/new") Записаться на приём
+        else if role === 'vet'
+          a.btn.btn-primary(href="/vet/dashboard") Мой кабинет
+        else if role === 'admin'
+          a.btn.btn-primary(href="/admin/dashboard") Панель администратора
+      else
+        a.btn.btn-primary(href="/auth/login") Войти
+        a.btn.btn-secondary(href="/auth/register") Зарегистрироваться
 
     .info-section
       h2 О нас
       p Мы предоставляем высококачественные ветеринарные услуги для всех видов домашних животных.
       p Наш опытный персонал готов помочь вашим питомцам быть здоровыми и счастливыми.
+
+    if !isAuthenticated
+      .services-preview
+        h2 Наши услуги
+        .cards-grid
+          .card
+            .card-image
+              img(src="/images/logo.png" alt="Консультация")
+            .card-content
+              h3 Консультация
+              p Первичный осмотр и диагностика
+
+          .card
+            .card-image
+              img(src="/images/logo.png" alt="Лечение")
+            .card-content
+              h3 Лечение
+              p Профессиональное лечение животных
+
+          .card
+            .card-image
+              img(src="/images/logo.png" alt="Профилактика")
+            .card-content
+              h3 Профилактика
+              p Вакцинация и профилактические процедуры
