@@ -53,6 +53,17 @@ block content
                   .visit-field
                     .field-label Заметки:
                     .field-value= visit.notes
+
+                - var visitPhotos = (photosByVisit && photosByVisit[visit.id]) || []
+                if visitPhotos.length
+                  .visit-field
+                    .field-label= 'Фото (' + visitPhotos.length + ')'
+                    .visit-photos(style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px")
+                      each p in visitPhotos
+                        a(href=p.photo_url target="_blank" style="text-decoration:none")
+                          img(src=p.photo_url style="width:120px; height:120px; object-fit:cover; border-radius:4px; border:1px solid #ddd")
+                          if p.caption
+                            small(style="display:block; text-align:center; color:#666; max-width:120px")= p.caption
         else
           .empty-state
             p Приёмы отсутствуют

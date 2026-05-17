@@ -6,12 +6,10 @@ const animalController = require('../controllers/animalController');
 const appointmentController = require('../controllers/appointmentController');
 const { uploadAnimalPhoto } = require('../config/multer');
 
-// Client dashboard and profile
 router.get('/dashboard', isClient, clientController.getDashboard);
 router.get('/profile', isClient, clientController.getProfile);
 router.post('/profile', isClient, clientController.postProfile);
 
-// Animals CRUD
 router.get('/animals', isClient, animalController.getAnimals);
 router.get('/animals/new', isClient, animalController.getNewAnimal);
 router.post('/animals', isClient, (req, res, next) => {
@@ -33,13 +31,11 @@ router.post('/animals/:id', isClient, (req, res, next) => {
 }, animalController.postUpdateAnimal);
 router.post('/animals/:id/delete', isClient, animalController.postDeleteAnimal);
 
-// Appointments
 router.get('/appointments', isClient, appointmentController.getAppointments);
 router.get('/appointments/new', isClient, appointmentController.getNewAppointment);
 router.post('/appointments', isClient, appointmentController.postAppointment);
 router.post('/appointments/:id/cancel', isClient, appointmentController.cancelAppointment);
 
-// Medical cards
 const medCardController = require('../controllers/medCardController');
 router.get('/medcards', isClient, medCardController.getClientMedCards);
 router.get('/medcards/:medCardId', isClient, medCardController.getClientMedCardDetail);

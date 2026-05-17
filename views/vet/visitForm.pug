@@ -6,14 +6,15 @@ block content
       .sidebar
         h3 Меню ветеринара
         a(href="/vet/dashboard") Дашборд
+        a(href="/vet/appointments") Приёмы
         a(href="/vet/schedule") Расписание
         a(href="/vet/medcards" class="active") Медкарты
 
       .main-panel
-        h1.dashboard-title=isEdit ? 'Редактирование приёма' : 'Новый приём'
+        h1.dashboard-title= isEdit ? 'Редактирование приёма' : 'Новый приём'
 
         .form-wrapper
-          form(method="POST" action=isEdit ? `/vet/visits/${visit.id}` : `/vet/medcards/${medCard.animal_id}/visits`)
+          form(method="POST" enctype="multipart/form-data" action=isEdit ? `/vet/visits/${visit.id}` : `/vet/medcards/${medCard.animal_id}/visits`)
             .form-group
               label Животное
               .form-value= medCard.animal_name
@@ -25,11 +26,11 @@ block content
             .form-row
               .form-group
                 label(for="visit_date") Дата приёма *
-                input#visit_date(type="date" name="visit_date" required value=visit ? visit.visit_date : today)
+                input#visit_date(type="date" name="visit_date" required value=(visit ? visit.visit_date : today))
 
             .form-group
-              label(for="diagnosis") Диагноз
-              textarea#diagnosis(name="diagnosis" placeholder="Введите диагноз...")= visit ? visit.diagnosis : ''
+              label(for="diagnosis") Диагноз *
+              textarea#diagnosis(name="diagnosis" placeholder="Введите диагноз..." required)= visit ? visit.diagnosis : ''
 
             .form-group
               label(for="treatment") Лечение
@@ -43,100 +44,61 @@ block content
               label(for="notes") Заметки
               textarea#notes(name="notes" placeholder="Дополнительные заметки...")= visit ? visit.notes : ''
 
+            if isEdit && photos && photos.length
+              .form-group
+                label Существующие фото:
+                .existing-photos(style="display:flex; flex-wrap:wrap; gap:12px")
+                  each p in photos
+                    .photo-item(style="position:relative; border:1px solid #ddd; border-radius:6px; padding:8px; background:#f9f9f9")
+                      img(src=p.photo_url style="width:140px; height:140px; object-fit:cover; border-radius:4px; display:block")
+                      if p.caption
+                        small(style="display:block; margin-top:4px; color:#666; max-width:140px")= p.caption
+                      form(method="POST" action=`/vet/visits/${visit.id}/photos/${p.id}/delete` style="margin-top:4px")
+                        button.btn.btn-sm.btn-danger(type="submit" onclick="return confirm('Удалить фото?')") Удалить
+
+            .form-group
+              label(for="photos") Добавить фото (можно несколько, до 10)
+              input#photos(type="file" name="photos" accept="image/*" multiple)
+              small(style="color:#666; display:block; margin-top:4px") Перетащите файлы сюда или нажмите для выбора. Макс 5 МБ на файл.
+              .photo-previews(id="photoPreviews" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:12px")
+
             if visit && visit.appointment_id
               input(type="hidden" name="appointment_id" value=visit.appointment_id)
 
             .form-actions
-              button.btn.btn-primary(type="submit")=isEdit ? 'Сохранить изменения' : 'Создать приём'
+              button.btn.btn-primary(type="submit")= isEdit ? 'Сохранить изменения' : 'Создать приём'
               a.btn.btn-secondary(href=isEdit ? `/vet/medcards/${medCard.animal_id}` : '/vet/medcards') Отмена
 
+        script.
+          document.getElementById('photos').addEventListener('change', function(e) {
+            const container = document.getElementById('photoPreviews');
+            container.innerHTML = '';
+            Array.from(e.target.files).forEach((file, idx) => {
+              const reader = new FileReader();
+              reader.onload = function(ev) {
+                const div = document.createElement('div');
+                div.style.cssText = 'border:1px solid #ddd; border-radius:6px; padding:8px; background:#f0fff0';
+                div.innerHTML = '<img src="' + ev.target.result + '" style="width:140px;height:140px;object-fit:cover;border-radius:4px;display:block">'
+                  + '<input type="text" name="photo_captions" placeholder="Подпись..." style="width:140px;margin-top:4px;padding:4px;font-size:12px">';
+                container.appendChild(div);
+              };
+              reader.readAsDataURL(file);
+            });
+          });
+
     style.
-      .form-wrapper {
-        background: white;
-        border-radius: 8px;
-        padding: 24px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      .form-wrapper { background: white; border-radius: 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+      .form-group { margin-bottom: 20px; }
+      .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #333; }
+      .form-group input[type="text"], .form-group input[type="date"], .form-group input[type="file"], .form-group textarea {
+        width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; font-size: 14px;
       }
-
-      .form-group {
-        margin-bottom: 20px;
-      }
-
-      .form-group label {
-        display: block;
-        font-weight: 600;
-        margin-bottom: 8px;
-        color: #333;
-      }
-
-      .form-group input[type="text"],
-      .form-group input[type="date"],
-      .form-group textarea {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-family: inherit;
-        font-size: 14px;
-      }
-
-      .form-group textarea {
-        resize: vertical;
-        min-height: 100px;
-      }
-
-      .form-group input:focus,
-      .form-group textarea:focus {
-        outline: none;
-        border-color: #4CAF50;
-        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-      }
-
-      .form-value {
-        padding: 10px;
-        background: #f5f5f5;
-        border-radius: 4px;
-        color: #333;
-      }
-
-      .form-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-      }
-
-      .form-actions {
-        display: flex;
-        gap: 12px;
-        margin-top: 24px;
-        padding-top: 24px;
-        border-top: 1px solid #eee;
-      }
-
-      .btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 14px;
-        text-decoration: none;
-        display: inline-block;
-      }
-
-      .btn-primary {
-        background-color: #4CAF50;
-        color: white;
-      }
-
-      .btn-primary:hover {
-        background-color: #45a049;
-      }
-
-      .btn-secondary {
-        background-color: #999;
-        color: white;
-      }
-
-      .btn-secondary:hover {
-        background-color: #777;
-      }
+      .form-group textarea { resize: vertical; min-height: 100px; }
+      .form-value { padding: 10px; background: #f5f5f5; border-radius: 4px; }
+      .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+      .form-actions { display: flex; gap: 12px; margin-top: 24px; padding-top: 24px; border-top: 1px solid #eee; }
+      .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
+      .btn-primary { background-color: #4CAF50; color: white; }
+      .btn-secondary { background-color: #999; color: white; }
+      .btn-danger { background-color: #dc3545; color: white; }
+      .btn-sm { padding: 4px 8px; font-size: 12px; }

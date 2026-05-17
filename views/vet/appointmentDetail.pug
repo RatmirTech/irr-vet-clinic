@@ -6,8 +6,9 @@ block content
       .sidebar
         h3 Меню ветеринара
         a(href="/vet/dashboard") Дашборд
-        a(href="/vet/schedule" class="active") Расписание
-        a(href="/vet/profile") Мой профиль
+        a(href="/vet/appointments" class="active") Приёмы
+        a(href="/vet/schedule") Расписание
+        a(href="/vet/medcards") Медкарты
 
       .main-panel
         .panel-header
@@ -59,11 +60,18 @@ block content
             form(method="POST" action=`/vet/appointments/${appointment.id}/confirm` style="display:inline;")
               button.btn.btn-primary(type="submit") Подтвердить
 
+          if appointment.status === 'confirmed'
+            form(method="POST" action=`/vet/appointments/${appointment.id}/complete` style="display:inline;")
+              button.btn.btn-primary(type="submit") Завершить
+
           if appointment.status === 'pending' || appointment.status === 'confirmed'
-            form(method="POST" action=`/client/appointments/${appointment.id}/cancel` style="display:inline;")
+            form(method="POST" action=`/vet/appointments/${appointment.id}/cancel` style="display:inline;")
               button.btn.btn-danger(type="submit" onclick="return confirm('Отменить эту запись?')") Отменить
 
-          a.btn.btn-secondary(href="/vet/schedule") Назад к расписанию
+          if appointment.animal_id
+            a.btn.btn-primary(href=`/vet/medcards/${appointment.animal_id}/visits/new`) + Новая запись в медкарту
+
+          a.btn.btn-secondary(href="/vet/appointments") Назад к списку
 
     style.
       .appointment-details-card {

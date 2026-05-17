@@ -1,0 +1,108 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню администратора
+        a(href="/admin/dashboard") Дашборд
+        a(href="/admin/vets") Ветеринары
+        a(href="/admin/services") Услуги
+        a(href="/admin/schedule") Расписание
+        a(href="/admin/animals") Животные
+        a(href="/admin/clients" class="active") Клиенты
+        a(href="/admin/medcards") Медкарты
+        if isSuperAdmin
+          a(href="/admin/admins") Администраторы
+
+      .main-panel
+        .panel-header
+          h1.dashboard-title= 'Запись на приём: ' + client.full_name
+          a.btn.btn-secondary(href="/admin/clients") ← К списку
+
+        p(style="color:#666") Шаг 3 из 3: запись на приём. Слоты подгружаются автоматически после выбора ветеринара и даты.
+
+        if error
+          .flash-message.flash-error= error
+
+        .form-wrapper
+          form(method="POST" action=`/admin/clients/${client.id}/appointments/new` id="appointmentForm")
+            .form-row
+              .form-group
+                label(for="animalId") Животное *
+                select#animalId(name="animalId" required)
+                  option(value="") Выберите...
+                  each a in animals
+                    option(value=a.id selected=(selectedAnimalId == a.id))= a.name + ' (' + (a.species || '?') + ')'
+              .form-group
+                label(for="vetId") Ветеринар *
+                select#vetId(name="vetId" required)
+                  option(value="") Выберите...
+                  each v in vets
+                    option(value=v.id)= v.full_name + ' — ' + (v.specialization || '')
+
+            .form-row
+              .form-group
+                label(for="appointmentDate") Дата *
+                input#appointmentDate(type="date" required min=new Date().toISOString().slice(0,10))
+              .form-group
+                label(for="serviceId") Услуга
+                select#serviceId(name="serviceId")
+                  option(value="") Без услуги
+                  each s in services
+                    option(value=s.id)= s.name + ' — ' + s.price + ' ₽'
+
+            .form-group
+              label Доступные слоты
+              .slots-container(id="slotsContainer" style="display:flex; flex-wrap:wrap; gap:6px; min-height:50px; padding:12px; background:#f8f9fa; border-radius:6px")
+                small(style="color:#666") Выберите ветеринара и дату, чтобы увидеть слоты
+              input(type="hidden" name="slotId" id="slotIdInput" required)
+
+            .form-group
+              label(for="notes") Заметки
+              textarea#notes(name="notes" placeholder="Жалобы, особые требования...")
+
+            .form-actions
+              button.btn.btn-primary(type="submit") ✓ Создать запись
+              a.btn.btn-secondary(href="/admin/clients") Отмена
+
+        script.
+          async function loadSlots() {
+            const vetId = document.getElementById('vetId').value;
+            const date = document.getElementById('appointmentDate').value;
+            const container = document.getElementById('slotsContainer');
+            if (!vetId || !date) {
+              container.innerHTML = '<small style="color:#666">Выберите ветеринара и дату</small>';
+              return;
+            }
+            container.innerHTML = '<small style="color:#666">Загрузка...</small>';
+            try {
+              const res = await fetch(`/api/slots?vetId=${vetId}&date=${date}`);
+              const slots = await res.json();
+              if (!slots.length) {
+                container.innerHTML = '<small style="color:#c00">Свободных слотов нет</small>';
+                return;
+              }
+              container.innerHTML = '';
+              slots.forEach(slot => {
+                const time = String(slot.slot_time).slice(0, 5);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = time;
+                btn.dataset.slotId = slot.id;
+                btn.style.cssText = 'padding:8px 14px; border:1px solid #007bff; background:white; color:#007bff; border-radius:4px; cursor:pointer';
+                btn.addEventListener('click', () => {
+                  document.querySelectorAll('#slotsContainer button').forEach(b => {
+                    b.style.background = 'white'; b.style.color = '#007bff';
+                  });
+                  btn.style.background = '#007bff'; btn.style.color = 'white';
+                  document.getElementById('slotIdInput').value = slot.id;
+                });
+                container.appendChild(btn);
+              });
+            } catch (e) {
+              container.innerHTML = '<small style="color:#c00">Ошибка загрузки</small>';
+            }
+          }
+          document.getElementById('vetId').addEventListener('change', loadSlots);
+          document.getElementById('appointmentDate').addEventListener('change', loadSlots);

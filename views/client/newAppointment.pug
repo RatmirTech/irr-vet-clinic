@@ -7,6 +7,8 @@ block content
         h3 Меню клиента
         a(href="/client/dashboard") Дашборд
         a(href="/client/animals") Мои питомцы
+        a(href="/client/medcards") Медкарты
+        a(href="/client/appointments") Мои записи
         a(href="/client/appointments" class="active") Мои записи
         a(href="/client/profile") Мой профиль
 
@@ -68,7 +70,6 @@ block content
         const slotsContainer = document.getElementById('slotsContainer');
         const slotInput = document.getElementById('slotId');
 
-        // Set minimum date to today
         const today = new Date().toISOString().split('T')[0];
         dateInput.setAttribute('min', today);
 
@@ -104,7 +105,6 @@ block content
 
               slotsContainer.innerHTML = html;
 
-              // Add event listeners to radio buttons
               document.querySelectorAll('input[name="temp_slot"]').forEach(radio => {
                 radio.addEventListener('change', function() {
                   slotInput.value = this.getAttribute('data-slot-id');

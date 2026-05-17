@@ -4,7 +4,6 @@ const runMigrations = async () => {
   try {
     console.log('Running database migrations...');
 
-    // Create users table
     await db.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -16,12 +15,23 @@ const runMigrations = async () => {
       )
     `);
 
-    // Add is_super_admin column if it doesn't exist (for existing databases)
     await db.query(`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN DEFAULT FALSE
     `);
 
-    // Create clients table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS admin_profiles (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL UNIQUE,
+        full_name VARCHAR(255) NOT NULL,
+        phone VARCHAR(20),
+        position VARCHAR(255),
+        photo_url VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
     await db.query(`
       CREATE TABLE IF NOT EXISTS clients (
         id SERIAL PRIMARY KEY,
@@ -34,7 +44,6 @@ const runMigrations = async () => {
       )
     `);
 
-    // Create vets table
     await db.query(`
       CREATE TABLE IF NOT EXISTS vets (
         id SERIAL PRIMARY KEY,
@@ -49,7 +58,6 @@ const runMigrations = async () => {
       )
     `);
 
-    // Create animals table
     await db.query(`
       CREATE TABLE IF NOT EXISTS animals (
         id SERIAL PRIMARY KEY,
@@ -65,7 +73,6 @@ const runMigrations = async () => {
       )
     `);
 
-    // Create services table
     await db.query(`
       CREATE TABLE IF NOT EXISTS services (
         id SERIAL PRIMARY KEY,
@@ -78,7 +85,6 @@ const runMigrations = async () => {
       )
     `);
 
-    // Create schedule_slots table
     await db.query(`
       CREATE TABLE IF NOT EXISTS schedule_slots (
         id SERIAL PRIMARY KEY,
@@ -92,7 +98,6 @@ const runMigrations = async () => {
       )
     `);
 
-    // Create appointments table
     await db.query(`
       CREATE TABLE IF NOT EXISTS appointments (
         id SERIAL PRIMARY KEY,
@@ -112,7 +117,6 @@ const runMigrations = async () => {
       )
     `);
 
-    // Create med_cards table
     await db.query(`
       CREATE TABLE IF NOT EXISTS med_cards (
         id SERIAL PRIMARY KEY,
@@ -122,7 +126,6 @@ const runMigrations = async () => {
       )
     `);
 
-    // Create visits table
     await db.query(`
       CREATE TABLE IF NOT EXISTS visits (
         id SERIAL PRIMARY KEY,
@@ -141,7 +144,17 @@ const runMigrations = async () => {
       )
     `);
 
-    // Create indexes for better performance
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS visit_photos (
+        id SERIAL PRIMARY KEY,
+        visit_id INTEGER NOT NULL,
+        photo_url VARCHAR(500) NOT NULL,
+        caption VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (visit_id) REFERENCES visits(id) ON DELETE CASCADE
+      )
+    `);
+
     await db.query(`CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_vets_user_id ON vets(user_id)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_animals_client_id ON animals(client_id)`);
@@ -152,8 +165,8 @@ const runMigrations = async () => {
     await db.query(`CREATE INDEX IF NOT EXISTS idx_med_cards_animal_id ON med_cards(animal_id)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_visits_med_card_id ON visits(med_card_id)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_visits_vet_id ON visits(vet_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_visit_photos_visit_id ON visit_photos(visit_id)`);
 
-    // Seed super admin if no super admin exists
     const bcrypt = require('bcryptjs');
     const superAdminCheck = await db.query(`SELECT id FROM users WHERE is_super_admin = TRUE LIMIT 1`);
     if (superAdminCheck.rows.length === 0) {

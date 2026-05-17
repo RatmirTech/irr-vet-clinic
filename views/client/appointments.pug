@@ -7,6 +7,7 @@ block content
         h3 Меню клиента
         a(href="/client/dashboard") Дашборд
         a(href="/client/animals") Мои питомцы
+        a(href="/client/medcards") Медкарты
         a(href="/client/appointments" class="active") Мои записи
         a(href="/client/profile") Мой профиль
 
@@ -16,11 +17,11 @@ block content
           a.btn.btn-primary(href="/client/appointments/new") + Новая запись
 
         .filter-tabs
-          a.filter-btn(href="?status=all" class=selectedStatus === 'all' ? 'active' : '') Все
-          a.filter-btn(href="?status=pending" class=selectedStatus === 'pending' ? 'active' : '') Ожидающие
-          a.filter-btn(href="?status=confirmed" class=selectedStatus === 'confirmed' ? 'active' : '') Подтверждённые
-          a.filter-btn(href="?status=completed" class=selectedStatus === 'completed' ? 'active' : '') Завершённые
-          a.filter-btn(href="?status=cancelled" class=selectedStatus === 'cancelled' ? 'active' : '') Отменённые
+          a.filter-btn(href="?status=all" class=(selectedStatus === 'all' ? 'active' : '')) Все
+          a.filter-btn(href="?status=pending" class=(selectedStatus === 'pending' ? 'active' : '')) Ожидающие
+          a.filter-btn(href="?status=confirmed" class=(selectedStatus === 'confirmed' ? 'active' : '')) Подтверждённые
+          a.filter-btn(href="?status=completed" class=(selectedStatus === 'completed' ? 'active' : '')) Завершённые
+          a.filter-btn(href="?status=cancelled" class=(selectedStatus === 'cancelled' ? 'active' : '')) Отменённые
 
         if appointments && appointments.length > 0
           .table-responsive
@@ -34,28 +35,21 @@ block content
                   th Статус
                   th Действия
               tbody
+                - var statusBg = { pending: '#ffc107', confirmed: '#28a745', completed: '#17a2b8', cancelled: '#dc3545' }
+                - var statusText = { pending: 'Ожидание', confirmed: 'Подтверждена', completed: 'Завершена', cancelled: 'Отменена' }
                 each apt in appointments
                   tr
                     td
-                      if apt.slot_date && apt.slot_time
-                        | #{apt.slot_date} #{apt.slot_time}
+                      if apt.slot_date
+                        div= new Date(apt.slot_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                        strong(style="font-size:15px")= apt.slot_time ? String(apt.slot_time).slice(0,5) : ''
                       else
-                        | -
-                    td= apt.vet_name || '-'
-                    td= apt.animal_name || '-'
-                    td= apt.service_name || '-'
+                        | —
+                    td= apt.vet_name || '—'
+                    td= apt.animal_name || '—'
+                    td= apt.service_name || '—'
                     td
-                      span.badge(class=`badge-${apt.status === 'confirmed' ? 'success' : apt.status === 'pending' ? 'warning' : apt.status === 'cancelled' ? 'danger' : 'info'}`)
-                        if apt.status === 'pending'
-                          | Ожидание
-                        else if apt.status === 'confirmed'
-                          | Подтверждена
-                        else if apt.status === 'completed'
-                          | Завершена
-                        else if apt.status === 'cancelled'
-                          | Отменена
-                        else
-                          = apt.status
+                      span(style=`padding:4px 10px; border-radius:4px; color:white; font-size:12px; background:${statusBg[apt.status] || '#666'}`)= statusText[apt.status] || apt.status
                     td
                       if apt.status === 'pending' || apt.status === 'confirmed'
                         form(method="POST" action=`/client/appointments/${apt.id}/cancel` style="display:inline;")
@@ -65,3 +59,46 @@ block content
             h3 Нет записей
             p
               a(href="/client/appointments/new") Запишитесь на приём
+
+    style.
+      .filter-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 8px;
+      }
+      .filter-btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        color: #495057;
+        background: #f8f9fa;
+        font-size: 14px;
+        transition: all 0.2s;
+        border: 1px solid #dee2e6;
+      }
+      .filter-btn:hover { background: #e9ecef; }
+      .filter-btn.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+        font-weight: 600;
+      }
+      .table-responsive {
+        background: white;
+        border-radius: 8px;
+        padding: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        overflow-x: auto;
+      }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; vertical-align: middle; }
+      th { background: #f8f9fa; font-weight: 600; font-size: 13px; color: #495057; }
+      .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
+      .btn-sm { padding: 4px 10px; font-size: 12px; }
+      .btn-primary { background: #007bff; color: white; }
+      .btn-danger { background: #dc3545; color: white; }
+      .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+      .empty-state { background: #f9f9f9; padding: 40px; text-align: center; border-radius: 8px; color: #666; }

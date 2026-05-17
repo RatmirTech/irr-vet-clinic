@@ -10,6 +10,7 @@ block content
         a(href="/admin/services") Услуги
         a(href="/admin/schedule") Расписание
         a(href="/admin/clients") Клиенты
+        a(href="/admin/medcards") Медкарты
         if isSuperAdmin
           a(href="/admin/admins" class="active") Администраторы
 
@@ -21,14 +22,20 @@ block content
         table.table
           thead
             tr
+              th ФИО
               th Email
+              th Должность
+              th Телефон
               th Тип
               th Дата создания
               th Действия
           tbody
             each admin in admins
               tr
+                td= admin.full_name || '—'
                 td= admin.email
+                td= admin.position || '—'
+                td= admin.phone || '—'
                 td
                   if admin.is_super_admin
                     span.badge.badge-super Супер-администратор
@@ -36,8 +43,9 @@ block content
                     span.badge.badge-admin Администратор
                 td= new Date(admin.created_at).toLocaleDateString('ru-RU')
                 td
+                  a.btn.btn-secondary(href=`/admin/admins/${admin.id}/edit` style="margin-right:4px") Изменить
                   if !admin.is_super_admin
                     form(method="POST" action=`/admin/admins/${admin.id}/delete` style="display:inline")
                       button.btn.btn-danger(type="submit" onclick="return confirm('Удалить администратора?')") Удалить
                   else
-                    span.text-muted —
+                    span.text-muted(title="Супер-администратора нельзя удалить") 🔒

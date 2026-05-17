@@ -1,0 +1,68 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню администратора
+        a(href="/admin/dashboard") Дашборд
+        a(href="/admin/vets") Ветеринары
+        a(href="/admin/services") Услуги
+        a(href="/admin/schedule") Расписание
+        a(href="/admin/animals") Животные
+        a(href="/admin/clients" class="active") Клиенты
+        a(href="/admin/medcards") Медкарты
+        if isSuperAdmin
+          a(href="/admin/admins") Администраторы
+
+      .main-panel
+        .panel-header
+          h1.dashboard-title= 'Питомец для: ' + client.full_name
+          a.btn.btn-secondary(href="/admin/clients") Пропустить →
+
+        p(style="color:#666") Шаг 2 из 3: добавление питомца. Можете пропустить или сразу записать на приём.
+
+        if error
+          .flash-message.flash-error= error
+
+        .form-wrapper
+          form(method="POST" action=`/admin/clients/${client.id}/animals/new` enctype="multipart/form-data")
+            .form-row
+              .form-group
+                label(for="name") Кличка *
+                input#name(type="text" name="name" required placeholder="Мурзик")
+              .form-group
+                label(for="species") Вид *
+                select#species(name="species" required)
+                  option(value="") Выберите...
+                  option(value="Кошка") Кошка
+                  option(value="Собака") Собака
+                  option(value="Птица") Птица
+                  option(value="Кролик") Кролик
+                  option(value="Грызун") Грызун
+                  option(value="Рептилия") Рептилия
+                  option(value="Другое") Другое
+
+            .form-row
+              .form-group
+                label(for="breed") Порода
+                input#breed(type="text" name="breed" placeholder="Например, Британская")
+              .form-group
+                label(for="birthDate") Дата рождения
+                input#birthDate(type="date" name="birthDate")
+
+            .form-row
+              .form-group
+                label(for="gender") Пол
+                select#gender(name="gender")
+                  option(value="") Не указан
+                  option(value="Самец") Самец
+                  option(value="Самка") Самка
+              .form-group
+                label(for="photo") Фото
+                input#photo(type="file" name="photo" accept="image/*")
+
+            .form-actions
+              button.btn.btn-primary(type="submit" name="skipToAppointment" value="1") Сохранить и записать на приём →
+              button.btn.btn-secondary(type="submit") Только сохранить
+              a.btn.btn-secondary(href="/admin/clients") Отмена

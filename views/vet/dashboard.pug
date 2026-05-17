@@ -6,137 +6,87 @@ block content
       .sidebar
         h3 Меню ветеринара
         a(href="/vet/dashboard" class="active") Дашборд
+        a(href="/vet/appointments") Приёмы
         a(href="/vet/schedule") Расписание
         a(href="/vet/medcards") Медкарты
 
       .main-panel
-        h1.dashboard-title Кабинет ветеринара
+        h1.dashboard-title= 'Здравствуйте, ' + (vet ? vet.full_name : 'врач') + '!'
 
-        if upcomingAppointments && upcomingAppointments.length > 0
-          .appointments-section
-            h2 Ближайшие приёмы
+        .stats-grid(style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-bottom:24px")
+          .stat-card(style="background:#fff3cd; border-left:4px solid #ffc107; padding:16px; border-radius:6px")
+            h4(style="margin:0;color:#856404") Ожидают
+            .number(style="font-size:28px;font-weight:700;color:#856404")= stats.pending
+          .stat-card(style="background:#d4edda; border-left:4px solid #28a745; padding:16px; border-radius:6px")
+            h4(style="margin:0;color:#155724") Подтверждены
+            .number(style="font-size:28px;font-weight:700;color:#155724")= stats.confirmed
+          .stat-card(style="background:#d1ecf1; border-left:4px solid #17a2b8; padding:16px; border-radius:6px")
+            h4(style="margin:0;color:#0c5460") Завершены
+            .number(style="font-size:28px;font-weight:700;color:#0c5460")= stats.completed
+          .stat-card(style="background:#f8d7da; border-left:4px solid #dc3545; padding:16px; border-radius:6px")
+            h4(style="margin:0;color:#721c24") Отменены
+            .number(style="font-size:28px;font-weight:700;color:#721c24")= stats.cancelled
+          .stat-card(style="background:#e7f3ff; border-left:4px solid #007bff; padding:16px; border-radius:6px")
+            h4(style="margin:0;color:#004085") Сегодня
+            .number(style="font-size:28px;font-weight:700;color:#004085")= stats.today_count
+          .stat-card(style="background:#e2e3e5; border-left:4px solid #6c757d; padding:16px; border-radius:6px")
+            h4(style="margin:0;color:#383d41") За 7 дней
+            .number(style="font-size:28px;font-weight:700;color:#383d41")= stats.week_count
 
-            .appointments-list
-              each apt in upcomingAppointments
-                .appointment-card
-                  .apt-date= apt.slot_date
-                  .apt-time= apt.slot_time
-                  .apt-details
-                    p
-                      strong= apt.animal_name
-                    p.client= apt.client_name
-                  .apt-actions
-                    a.btn.btn-sm(href=`/vet/appointments/${apt.appointment_id}`) Просмотр
+        .quick-actions(style="margin-bottom:24px")
+          a.btn.btn-primary(href="/vet/appointments?status=pending" style="margin-right:8px") Заявки в ожидании
+          a.btn.btn-secondary(href="/vet/schedule") Расписание сегодня
+          a.btn.btn-secondary(href="/vet/medcards") Все медкарты
+
+        h2 Ближайшие приёмы
+
+        if upcomingAppointments && upcomingAppointments.length
+          .appointments-list
+            each apt in upcomingAppointments
+              .appointment-card
+                .apt-date
+                  div= new Date(apt.slot_date).toLocaleDateString('ru-RU')
+                  div(style="font-size:18px; font-weight:bold")= String(apt.slot_time).slice(0,5)
+                .apt-details
+                  p
+                    strong= apt.animal_name
+                    |
+                    span(style="color:#999")= ' (' + (apt.species || '?') + ')'
+                  p.client= apt.client_name
+                  p(style="color:#666; font-size:13px")= apt.service_name || 'Без услуги'
+                .apt-status
+                  - var statusLabel = { pending: 'Ожидает', confirmed: 'Подтверждена' }
+                  - var statusBg = { pending: '#ffc107', confirmed: '#28a745' }
+                  span(style=`padding:4px 10px; border-radius:4px; color:white; background:${statusBg[apt.status]}; font-size:13px`)= statusLabel[apt.status] || apt.status
+                .apt-actions
+                  a.btn.btn-sm.btn-primary(href=`/vet/appointments/${apt.appointment_id}`) Открыть
+                  a.btn.btn-sm.btn-success(href=`/vet/medcards/${apt.animal_id}/visits/new`) + Приём
         else
           .empty-state
-            h2 Добро пожаловать!
-            p На текущий момент запланированных приёмов нет.
+            p На ближайшее время приёмов нет.
 
-        a.btn.btn-primary(href="/vet/schedule") Посмотреть расписание
+        if myAnimals && myAnimals.length
+          h2(style="margin-top:32px") Мои пациенты (последние)
+          .animals-grid(style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:8px")
+            each an in myAnimals
+              a(href=`/vet/medcards/${an.id}` style="display:block; padding:12px; background:white; border-radius:6px; text-decoration:none; color:#333; border:1px solid #eee")
+                strong= an.name
+                br
+                small(style="color:#666")= an.species || ''
 
     style.
-      .appointments-section {
-        margin-bottom: 24px;
-      }
-
-      .appointments-section h2 {
-        margin-top: 0;
-        font-size: 18px;
-        color: #333;
-        margin-bottom: 16px;
-      }
-
-      .appointments-list {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-
+      .appointments-list { display: flex; flex-direction: column; gap: 12px; }
       .appointment-card {
-        background: white;
-        border-radius: 8px;
-        padding: 16px;
-        display: grid;
-        grid-template-columns: 100px 100px 1fr auto;
-        gap: 16px;
-        align-items: center;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        background: white; border-radius: 8px; padding: 16px;
+        display: grid; grid-template-columns: 110px 1fr 130px auto; gap: 16px; align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
-
-      .apt-date {
-        font-weight: 600;
-        color: #2E5FA3;
-        font-size: 14px;
-      }
-
-      .apt-time {
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-      }
-
-      .apt-details p {
-        margin: 0;
-        font-size: 14px;
-      }
-
-      .apt-details p:first-child {
-        font-weight: 600;
-      }
-
-      .apt-details .client {
-        color: #666;
-        font-size: 13px;
-      }
-
-      .apt-actions {
-        text-align: right;
-      }
-
-      .btn.btn-sm {
-        padding: 6px 12px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        text-decoration: none;
-        font-size: 12px;
-      }
-
-      .btn.btn-sm:hover {
-        background-color: #45a049;
-      }
-
-      .btn-primary {
-        background-color: #4CAF50;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-block;
-      }
-
-      .btn-primary:hover {
-        background-color: #45a049;
-      }
-
-      .empty-state {
-        background: #f9f9f9;
-        border-radius: 8px;
-        padding: 40px 20px;
-        text-align: center;
-        margin-bottom: 24px;
-      }
-
-      .empty-state h2 {
-        margin: 0 0 12px 0;
-        color: #666;
-      }
-
-      .empty-state p {
-        margin: 0;
-        color: #999;
-      }
+      .apt-date { color: #2E5FA3; font-size: 13px; }
+      .apt-details p { margin: 2px 0; font-size: 14px; }
+      .apt-actions { display: flex; gap: 6px; flex-direction: column; }
+      .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 13px; display: inline-block; text-align: center; }
+      .btn-sm { padding: 4px 10px; font-size: 12px; }
+      .btn-primary { background-color: #007bff; color: white; }
+      .btn-secondary { background-color: #6c757d; color: white; }
+      .btn-success { background-color: #28a745; color: white; }
+      .empty-state { background: #f9f9f9; border-radius: 8px; padding: 32px; text-align: center; color: #666; }

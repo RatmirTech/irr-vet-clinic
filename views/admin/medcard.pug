@@ -1,0 +1,76 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню администратора
+        a(href="/admin/dashboard") Дашборд
+        a(href="/admin/vets") Ветеринары
+        a(href="/admin/services") Услуги
+        a(href="/admin/schedule") Расписание
+        a(href="/admin/animals") Животные
+        a(href="/admin/clients") Клиенты
+        a(href="/admin/medcards" class="active") Медкарты
+        if isSuperAdmin
+          a(href="/admin/admins") Администраторы
+
+      .main-panel
+        .panel-header
+          div
+            h1.dashboard-title= 'Медкарта: ' + animal.name
+            small= (animal.species || '') + (animal.breed ? ' / ' + animal.breed : '')
+          a.btn.btn-secondary(href="/admin/medcards") ← К списку
+
+        .info-section(style="background:#f8f9fa; padding:16px; border-radius:8px; margin-bottom:16px")
+          h3 Владелец
+          p
+            strong= animal.client_name
+            br
+            small(style="color:#666")= animal.client_email
+          if animal.birth_date
+            p Дата рождения: #{new Date(animal.birth_date).toLocaleDateString('ru-RU')}
+          if animal.gender
+            p Пол: #{animal.gender}
+
+        h3 История посещений (#{visits.length})
+
+        if visits && visits.length
+          each v in visits
+            .visit-card(style="border:1px solid #e0e0e0; border-radius:8px; padding:16px; margin-bottom:12px; background:white")
+              .visit-header(style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px")
+                strong= new Date(v.visit_date).toLocaleDateString('ru-RU')
+                span(style="color:#666; font-size:14px")= 'Врач: ' + v.vet_name
+              if v.diagnosis
+                p
+                  strong Диагноз:
+                  |
+                  = ' ' + v.diagnosis
+              if v.treatment
+                p
+                  strong Лечение:
+                  |
+                  = ' ' + v.treatment
+              if v.prescriptions
+                p
+                  strong Назначения:
+                  |
+                  = ' ' + v.prescriptions
+              if v.notes
+                p
+                  strong Заметки:
+                  |
+                  = ' ' + v.notes
+              - var visitPhotos = (photosByVisit && photosByVisit[v.id]) || []
+              if visitPhotos.length
+                p
+                  strong= 'Фото (' + visitPhotos.length + '):'
+                .visit-photos(style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px")
+                  each ph in visitPhotos
+                    a(href=ph.photo_url target="_blank" style="text-decoration:none")
+                      img(src=ph.photo_url style="width:120px; height:120px; object-fit:cover; border-radius:4px; border:1px solid #ddd")
+                      if ph.caption
+                        small(style="display:block; text-align:center; color:#666; max-width:120px")= ph.caption
+        else
+          .empty-state
+            h3 Посещений ещё не было

@@ -1,0 +1,64 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню администратора
+        a(href="/admin/dashboard") Дашборд
+        a(href="/admin/vets" class="active") Ветеринары
+        a(href="/admin/services") Услуги
+        a(href="/admin/schedule") Расписание
+        a(href="/admin/animals") Животные
+        a(href="/admin/clients") Клиенты
+        a(href="/admin/medcards") Медкарты
+        if isSuperAdmin
+          a(href="/admin/admins") Администраторы
+
+      .main-panel
+        .panel-header
+          div
+            h1.dashboard-title= 'Заявки: ' + vet.full_name
+            small= vet.specialization || ''
+          a.btn.btn-secondary(href="/admin/vets") ← К списку
+
+        - var statusLabel = { pending: 'Ожидает', confirmed: 'Подтверждена', completed: 'Завершена', cancelled: 'Отменена' }
+        - var statusColor = { pending: '#ffc107', confirmed: '#28a745', completed: '#17a2b8', cancelled: '#dc3545' }
+
+        if appointments && appointments.length
+          .table-responsive
+            table
+              thead
+                tr
+                  th #
+                  th Дата/время
+                  th Клиент
+                  th Животное
+                  th Услуга
+                  th Заметки
+                  th Статус
+              tbody
+                each a, i in appointments
+                  tr
+                    td= i + 1
+                    td
+                      if a.slot_date
+                        = new Date(a.slot_date).toLocaleDateString('ru-RU')
+                        |
+                        = String(a.slot_time).slice(0,5)
+                      else
+                        | —
+                    td
+                      div= a.client_name
+                      small(style="color:#666")= a.client_email
+                    td
+                      div= a.animal_name
+                      small(style="color:#666")= a.species || ''
+                    td= a.service_name || '—'
+                    td= a.notes || '—'
+                    td
+                      span(style=`padding:4px 8px; border-radius:4px; color:white; background:${statusColor[a.status]};`)= statusLabel[a.status] || a.status
+        else
+          .empty-state
+            h3 Заявок нет
+            p У этого ветеринара пока нет записей

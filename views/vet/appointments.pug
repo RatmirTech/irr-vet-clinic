@@ -1,0 +1,127 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню ветеринара
+        a(href="/vet/dashboard") Дашборд
+        a(href="/vet/appointments" class="active") Приёмы
+        a(href="/vet/schedule") Расписание
+        a(href="/vet/medcards") Медкарты
+
+      .main-panel
+        h1.dashboard-title Мои приёмы
+
+        - var statusLabel = { pending: 'Ожидает', confirmed: 'Подтверждена', completed: 'Завершена', cancelled: 'Отменена' }
+        - var statusColor = { pending: '#ffc107', confirmed: '#28a745', completed: '#17a2b8', cancelled: '#dc3545' }
+
+        form(method="GET" action="/vet/appointments" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; align-items:end")
+          .form-group
+            label Статус
+            select(name="status" style="padding:8px")
+              option(value="") Все статусы
+              option(value="pending" selected=(filters.status === 'pending')) Ожидает
+              option(value="confirmed" selected=(filters.status === 'confirmed')) Подтверждена
+              option(value="completed" selected=(filters.status === 'completed')) Завершена
+              option(value="cancelled" selected=(filters.status === 'cancelled')) Отменена
+          .form-group
+            label Дата с
+            input(type="date" name="dateFrom" value=filters.dateFrom style="padding:8px")
+          .form-group
+            label Дата по
+            input(type="date" name="dateTo" value=filters.dateTo style="padding:8px")
+          button.btn.btn-primary(type="submit") Фильтр
+          a.btn.btn-secondary(href="/vet/appointments") Сброс
+
+        if appointments && appointments.length
+          .table-responsive
+            table#appointmentsTable.sortable
+              thead
+                tr
+                  th(data-sort="date") Дата/время ⇅
+                  th(data-sort="string") Клиент ⇅
+                  th(data-sort="string") Животное ⇅
+                  th(data-sort="string") Услуга ⇅
+                  th Заметки
+                  th(data-sort="string") Статус ⇅
+                  th Действия
+              tbody
+                each a in appointments
+                  tr
+                    td
+                      if a.slot_date
+                        div= new Date(a.slot_date).toLocaleDateString('ru-RU')
+                        strong= String(a.slot_time).slice(0,5)
+                      else
+                        | —
+                    td
+                      div= a.client_name
+                      small(style="color:#666")= a.client_email
+                    td
+                      div= a.animal_name
+                      small(style="color:#666")= a.species || ''
+                    td= a.service_name || '—'
+                    td= a.notes || '—'
+                    td
+                      span(style=`padding:4px 10px; border-radius:4px; color:white; background:${statusColor[a.status]}; font-size:12px; white-space:nowrap`)= statusLabel[a.status] || a.status
+                    td
+                      .actions(style="display:flex; flex-direction:column; gap:4px")
+                        a.btn.btn-sm.btn-primary(href=`/vet/appointments/${a.appointment_id}`) Открыть
+                        if a.status === 'pending'
+                          form(method="POST" action=`/vet/appointments/${a.appointment_id}/confirm` style="margin:0")
+                            button.btn.btn-sm.btn-success(type="submit") Подтвердить
+                        if a.status === 'confirmed'
+                          form(method="POST" action=`/vet/appointments/${a.appointment_id}/complete` style="margin:0")
+                            button.btn.btn-sm.btn-info(type="submit") Завершить
+                        if a.status !== 'cancelled' && a.status !== 'completed'
+                          form(method="POST" action=`/vet/appointments/${a.appointment_id}/cancel` style="margin:0")
+                            button.btn.btn-sm.btn-danger(type="submit" onclick="return confirm('Отменить приём?')") Отменить
+                        a.btn.btn-sm.btn-secondary(href=`/vet/medcards/${a.animal_id}/visits/new`) + Запись
+        else
+          .empty-state
+            h3 Приёмов не найдено
+            p Измените фильтр или дождитесь новых записей.
+
+        script.
+          document.querySelectorAll('table.sortable th[data-sort]').forEach((th, idx) => {
+            th.style.cursor = 'pointer';
+            th.addEventListener('click', () => {
+              const table = th.closest('table');
+              const tbody = table.querySelector('tbody');
+              const rows = Array.from(tbody.querySelectorAll('tr'));
+              const type = th.dataset.sort;
+              const asc = th.dataset.asc !== 'true';
+              th.dataset.asc = asc;
+              rows.sort((a, b) => {
+                const av = a.children[idx].innerText.trim();
+                const bv = b.children[idx].innerText.trim();
+                if (type === 'date') {
+                  const parse = s => {
+                    const m = s.match(/(\d{2})\.(\d{2})\.(\d{4})\s*(\d{2}:\d{2})?/);
+                    if (!m) return 0;
+                    return new Date(`${m[3]}-${m[2]}-${m[1]}T${m[4] || '00:00'}`).getTime();
+                  };
+                  return (parse(av) - parse(bv)) * (asc ? 1 : -1);
+                }
+                return av.localeCompare(bv, 'ru') * (asc ? 1 : -1);
+              });
+              rows.forEach(r => tbody.appendChild(r));
+            });
+          });
+
+    style.
+      .table-responsive { overflow-x: auto; background: white; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #eee; vertical-align: top; }
+      th { background: #f8f9fa; font-weight: 600; }
+      .form-group { display: flex; flex-direction: column; }
+      .form-group label { font-size: 12px; color: #666; margin-bottom: 2px; }
+      .btn { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 13px; display: inline-block; text-align: center; }
+      .btn-sm { padding: 4px 8px; font-size: 11px; }
+      .btn-primary { background-color: #007bff; color: white; }
+      .btn-secondary { background-color: #6c757d; color: white; }
+      .btn-success { background-color: #28a745; color: white; }
+      .btn-info { background-color: #17a2b8; color: white; }
+      .btn-danger { background-color: #dc3545; color: white; }
+      .empty-state { background: #f9f9f9; padding: 32px; text-align: center; color: #666; border-radius: 8px; }

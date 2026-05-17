@@ -65,6 +65,9 @@ const animalController = {
         photoUrl
       );
 
+      const MedCardModel = require('../models/medCardModel');
+      await MedCardModel.getOrCreate(animal.id);
+
       req.flash('success', `Питомец "${name}" успешно добавлен!`);
       res.redirect('/client/animals');
     } catch (err) {

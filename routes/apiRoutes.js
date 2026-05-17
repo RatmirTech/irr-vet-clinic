@@ -3,7 +3,6 @@ const router = express.Router();
 const scheduleController = require('../controllers/scheduleController');
 const ScheduleModel = require('../models/scheduleModel');
 
-// Get available slots for a vet on a specific date
 router.get('/slots', async (req, res) => {
   try {
     const { vetId, date } = req.query;

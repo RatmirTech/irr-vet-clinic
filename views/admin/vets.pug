@@ -9,7 +9,9 @@ block content
         a(href="/admin/vets" class="active") Ветеринары
         a(href="/admin/services") Услуги
         a(href="/admin/schedule") Расписание
+        a(href="/admin/animals") Животные
         a(href="/admin/clients") Клиенты
+        a(href="/admin/medcards") Медкарты
         if isSuperAdmin
           a(href="/admin/admins") Администраторы
 
@@ -18,6 +20,23 @@ block content
           h1.dashboard-title Управление ветеринарами
           a.btn.btn-primary(href="/admin/vets/new") + Добавить ветеринара
 
+        - var f = filters || { search: '', specialization: '', sortBy: '' }
+        - var specs = specializations || []
+        form.filter-bar(method="GET" action="/admin/vets" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;")
+          input(type="search" name="search" placeholder="Поиск по ФИО..." value=f.search style="flex:1; min-width:200px; padding:8px;")
+          select(name="specialization" style="padding:8px;")
+            option(value="") Все специализации
+            each spec in specs
+              option(value=spec selected=(f.specialization === spec))= spec
+          select(name="sortBy" style="padding:8px;")
+            option(value="") По дате создания
+            option(value="name_asc" selected=(f.sortBy === 'name_asc')) ФИО А-Я
+            option(value="name_desc" selected=(f.sortBy === 'name_desc')) ФИО Я-А
+            option(value="experience_desc" selected=(f.sortBy === 'experience_desc')) Опыт ↓
+            option(value="experience_asc" selected=(f.sortBy === 'experience_asc')) Опыт ↑
+          button.btn.btn-primary(type="submit") Применить
+          a.btn.btn-secondary(href="/admin/vets") Сброс
+
         if vets && vets.length > 0
           .table-responsive
             table
@@ -25,11 +44,16 @@ block content
                 tr
                   th Фото
                   th ФИО
+                  th Email
                   th Специализация
                   th Опыт
+                  th Заявки
                   th Действия
               tbody
+                - var cMap = countsByVet || {}
                 each vet in vets
+                  - var counts = cMap[vet.id] || { pending: 0, confirmed: 0, completed: 0, cancelled: 0 }
+                  - var total = counts.pending + counts.confirmed + counts.completed + counts.cancelled
                   tr
                     td
                       if vet.photo_url
@@ -37,8 +61,15 @@ block content
                       else
                         img(src="/images/logo.png" alt="Нет фото" style="max-width: 50px; max-height: 50px;")
                     td= vet.full_name
-                    td= vet.specialization
-                    td= vet.experience + ' лет'
+                    td= vet.email
+                    td= vet.specialization || '—'
+                    td= (vet.experience || 0) + ' лет'
+                    td
+                      a(href=`/admin/vets/${vet.id}/requests` style="display:inline-block; padding:4px 8px; background:#eef; border-radius:4px; text-decoration:none;")
+                        | Всего: #{total}
+                      br
+                      small(style="color:#666")
+                        | Ожидает: #{counts.pending} / Подтв: #{counts.confirmed} / Заверш: #{counts.completed}
                     td
                       .actions
                         a.btn.btn-sm.btn-primary(href=`/admin/vets/${vet.id}/edit`) Редактировать
@@ -46,6 +77,6 @@ block content
                           button.btn.btn-sm.btn-danger(type="submit" onclick="return confirm('Вы уверены?')") Удалить
         else
           .empty-state
-            h3 Ветеринаров нет
+            h3 Ветеринаров не найдено
             p
               a(href="/admin/vets/new") Добавьте первого ветеринара

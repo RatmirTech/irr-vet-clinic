@@ -9,10 +9,16 @@ block content
         a(href="/admin/vets") Ветеринары
         a(href="/admin/services") Услуги
         a(href="/admin/schedule") Расписание
+        a(href="/admin/animals") Животные
         a(href="/admin/clients" class="active") Клиенты
+        a(href="/admin/medcards") Медкарты
+        if isSuperAdmin
+          a(href="/admin/admins") Администраторы
 
       .main-panel
-        h1.dashboard-title Управление клиентами
+        .panel-header(style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px")
+          h1.dashboard-title Управление клиентами
+          a.btn.btn-primary(href="/admin/clients/new") + Новый клиент
 
         if clients && clients.length > 0
           .table-responsive
@@ -24,6 +30,7 @@ block content
                   th Телефон
                   th Животных
                   th Дата регистрации
+                  th Действия
               tbody
                 each client in clients
                   tr
@@ -32,6 +39,9 @@ block content
                     td= client.phone || '-'
                     td= client.animal_count || 0
                     td= client.created_at ? new Date(client.created_at).toLocaleDateString('ru-RU') : '-'
+                    td(style="display:flex; gap:4px")
+                      a.btn.btn-sm.btn-secondary(href=`/admin/clients/${client.id}/animals/new`) + Питомец
+                      a.btn.btn-sm.btn-primary(href=`/admin/clients/${client.id}/appointments/new`) + Запись
 
           if pagination
             .pagination
@@ -49,6 +59,8 @@ block content
             p Когда клиенты зарегистрируются, они появятся здесь
 
     style.
+      .btn-sm { padding: 4px 10px; font-size: 12px; }
+      .btn-primary { background:#007bff; color:white; padding:8px 16px; border:none; border-radius:4px; text-decoration:none; display:inline-block; }
       .pagination {
         display: flex;
         justify-content: center;

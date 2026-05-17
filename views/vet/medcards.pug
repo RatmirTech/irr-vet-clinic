@@ -6,16 +6,23 @@ block content
       .sidebar
         h3 Меню ветеринара
         a(href="/vet/dashboard") Дашборд
+        a(href="/vet/appointments") Приёмы
         a(href="/vet/schedule") Расписание
         a(href="/vet/medcards" class="active") Медкарты
 
       .main-panel
         h1.dashboard-title Медицинские карты
 
+        .search-bar(style="margin-bottom:16px; display:flex; gap:8px; align-items:center")
+          input#medcardSearch(type="text" placeholder="Поиск по имени, виду, породе или владельцу..." style="flex:1; padding:10px 14px; border:1px solid #ddd; border-radius:6px; font-size:14px")
+          select#speciesFilter(style="padding:10px; border:1px solid #ddd; border-radius:6px")
+            option(value="") Все виды
+          span#resultCount(style="color:#666; font-size:13px; white-space:nowrap")
+
         if medCards && medCards.length > 0
-          .medcards-grid
+          .medcards-grid#medcardsGrid
             each card in medCards
-              .medcard-item
+              .medcard-item(data-name=(card.animal.name || '').toLowerCase() data-species=(card.animal.species || '').toLowerCase() data-breed=(card.animal.breed || '').toLowerCase() data-client=(card.animal.client_name || '').toLowerCase())
                 if card.animal.photo_url
                   img.medcard-photo(src=card.animal.photo_url alt=card.animal.name)
                 else
@@ -33,6 +40,39 @@ block content
           .empty-state
             h3 Нет медкарт
             p Медкарты появятся, когда животные будут добавлены в систему
+
+        script.
+          (function() {
+            const input = document.getElementById('medcardSearch');
+            const speciesSel = document.getElementById('speciesFilter');
+            const counter = document.getElementById('resultCount');
+            const items = Array.from(document.querySelectorAll('#medcardsGrid .medcard-item'));
+            if (!items.length) return;
+            const speciesSet = new Set();
+            items.forEach(i => { if (i.dataset.species) speciesSet.add(i.dataset.species); });
+            Array.from(speciesSet).sort().forEach(s => {
+              const opt = document.createElement('option');
+              opt.value = s;
+              opt.textContent = s.charAt(0).toUpperCase() + s.slice(1);
+              speciesSel.appendChild(opt);
+            });
+            function apply() {
+              const q = input.value.trim().toLowerCase();
+              const sp = speciesSel.value;
+              let visible = 0;
+              items.forEach(it => {
+                const matchQ = !q || it.dataset.name.includes(q) || it.dataset.species.includes(q) || it.dataset.breed.includes(q) || it.dataset.client.includes(q);
+                const matchS = !sp || it.dataset.species === sp;
+                const show = matchQ && matchS;
+                it.style.display = show ? '' : 'none';
+                if (show) visible++;
+              });
+              counter.textContent = `Найдено: ${visible} из ${items.length}`;
+            }
+            input.addEventListener('input', apply);
+            speciesSel.addEventListener('change', apply);
+            apply();
+          })();
 
     style.
       .medcards-grid {

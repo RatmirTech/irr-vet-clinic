@@ -1,0 +1,47 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню администратора
+        a(href="/admin/dashboard") Дашборд
+        a(href="/admin/vets") Ветеринары
+        a(href="/admin/services") Услуги
+        a(href="/admin/schedule") Расписание
+        a(href="/admin/clients") Клиенты
+        a(href="/admin/medcards") Медкарты
+        a(href="/admin/animals" class="active") Животные
+        if isSuperAdmin
+          a(href="/admin/admins") Администраторы
+
+      .main-panel
+        h1.dashboard-title Управление животными
+
+        table.table
+          thead
+            tr
+              th Фото
+              th Кличка
+              th Вид / Порода
+              th Владелец
+              th Email владельца
+              th Пол
+              th Действия
+          tbody
+            each animal in animals
+              tr
+                td
+                  if animal.photo_url
+                    img(src=animal.photo_url alt=animal.name style="width:40px;height:40px;object-fit:cover;border-radius:4px")
+                  else
+                    span —
+                td= animal.name
+                td= (animal.species || '') + (animal.breed ? ' / ' + animal.breed : '')
+                td= animal.owner_name
+                td= animal.owner_email
+                td= animal.gender || '—'
+                td
+                  a.btn.btn-secondary(href=`/admin/animals/${animal.id}/edit`) Изменить
+                  form(method="POST" action=`/admin/animals/${animal.id}/delete` style="display:inline;margin-left:4px")
+                    button.btn.btn-danger(type="submit" onclick="return confirm('Удалить животное?')") Удалить

@@ -6,60 +6,185 @@ block content
       .sidebar
         h3 Меню клиента
         a(href="/client/dashboard") Дашборд
-        a(href="/animals" class="active") Мои питомцы
+        a(href="/client/animals" class="active") Мои питомцы
+        a(href="/client/medcards") Медкарты
+        a(href="/client/appointments") Мои записи
         a(href="/client/profile") Мой профиль
 
       .main-panel
-        h1.dashboard-title= isEdit ? 'Редактировать питомца' : 'Добавить питомца'
+        h1.dashboard-title= isEdit ? 'Редактировать питомца' : 'Добавить нового питомца'
 
         if error
           .flash-message.flash-error
             span.close-btn ✕
             = error
 
+        if !isEdit
+          .wizard-steps(style="display:flex; gap:8px; margin-bottom:24px")
+            .step.active(data-step="1" style="flex:1; padding:12px; background:#007bff; color:white; border-radius:6px; text-align:center; font-size:14px")
+              | 1. Основное
+            .step(data-step="2" style="flex:1; padding:12px; background:#e9ecef; color:#666; border-radius:6px; text-align:center; font-size:14px")
+              | 2. Детали
+            .step(data-step="3" style="flex:1; padding:12px; background:#e9ecef; color:#666; border-radius:6px; text-align:center; font-size:14px")
+              | 3. Фото
+            .step(data-step="4" style="flex:1; padding:12px; background:#e9ecef; color:#666; border-radius:6px; text-align:center; font-size:14px")
+              | 4. Готово
+
         .form-wrapper
-          form(method="POST" enctype="multipart/form-data" action=isEdit ? `/client/animals/${animal.id}` : '/client/animals' id="animalForm" data-validate="true")
-            .form-row
-              .form-group
-                label(for="name") Кличка питомца *
-                input#name(type="text" name="name" value=animal?.name required placeholder="Например: Мурзик")
+          form#animalForm(method="POST" enctype="multipart/form-data" action=isEdit ? `/client/animals/${animal.id}` : '/client/animals')
+
+            .wizard-page(data-page="1")
+              h3 Расскажите о вашем питомце
+              p(style="color:#666; font-size:14px") Начнём с самого важного — имени и вида животного.
+
+              .form-row
+                .form-group
+                  label(for="name") Кличка питомца *
+                  input#name(type="text" name="name" value=(animal ? animal.name : '') required placeholder="Например: Мурзик, Барсик, Рекс...")
+                  small(style="color:#666") Как зовут вашего любимца?
 
               .form-group
-                label(for="species") Вид животного *
-                select#species(name="species" required)
-                  option(value="") Выберите вид...
-                  option(value="Кошка" selected=(animal?.species === 'Кошка')) Кошка
-                  option(value="Собака" selected=(animal?.species === 'Собака')) Собака
-                  option(value="Птица" selected=(animal?.species === 'Птица')) Птица
-                  option(value="Кролик" selected=(animal?.species === 'Кролик')) Кролик
-                  option(value="Грызун" selected=(animal?.species === 'Грызун')) Грызун
-                  option(value="Другое" selected=(animal?.species === 'Другое')) Другое
+                label Вид животного *
+                .species-picker(style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; margin-top:8px")
+                  - var speciesList = [{v:'Кошка',e:'🐱'},{v:'Собака',e:'🐶'},{v:'Птица',e:'🦜'},{v:'Кролик',e:'🐰'},{v:'Грызун',e:'🐹'},{v:'Рыбка',e:'🐠'},{v:'Рептилия',e:'🦎'},{v:'Другое',e:'🐾'}]
+                  each sp in speciesList
+                    label.species-option(style=`cursor:pointer; padding:12px; border:2px solid ${(animal && animal.species === sp.v) ? '#007bff' : '#ddd'}; border-radius:8px; text-align:center; background:white`)
+                      input(type="radio" name="species" value=sp.v required checked=(animal && animal.species === sp.v) style="display:none")
+                      div(style="font-size:32px")= sp.e
+                      div(style="font-size:14px; margin-top:4px")= sp.v
 
-            .form-row
+              if !isEdit
+                .wizard-nav(style="display:flex; justify-content:flex-end; margin-top:24px; padding-top:16px; border-top:1px solid #eee")
+                  button.btn.btn-primary(type="button" onclick="nextStep(2)") Далее →
+
+            .wizard-page(data-page="2" style=(isEdit ? '' : 'display:none'))
+              h3 Дополнительная информация
+              p(style="color:#666; font-size:14px") Эти данные помогут ветеринару лучше понять вашего питомца. Все поля необязательные.
+
+              .form-row
+                .form-group
+                  label(for="breed") Порода
+                  input#breed(type="text" name="breed" value=(animal ? animal.breed : '') placeholder="Например: Британская, Лабрадор...")
+                  small(style="color:#666") Если не знаете — оставьте пустым
+
+                .form-group
+                  label(for="birthDate") Дата рождения
+                  input#birthDate(type="date" name="birthDate" value=(animal && animal.birth_date ? new Date(animal.birth_date).toISOString().slice(0,10) : ''))
+                  small(style="color:#666") Точная или примерная
+
               .form-group
-                label(for="breed") Порода
-                input#breed(type="text" name="breed" value=animal?.breed placeholder="Например: Персидская")
+                label Пол питомца
+                .gender-picker(style="display:flex; gap:10px; margin-top:8px")
+                  label(style=`flex:1; cursor:pointer; padding:12px; border:2px solid ${(animal && animal.gender === 'Самец') ? '#007bff' : '#ddd'}; border-radius:8px; text-align:center; background:white`)
+                    input(type="radio" name="gender" value="Самец" checked=(animal && animal.gender === 'Самец') style="display:none")
+                    div(style="font-size:24px") ♂
+                    div Самец
+                  label(style=`flex:1; cursor:pointer; padding:12px; border:2px solid ${(animal && animal.gender === 'Самка') ? '#007bff' : '#ddd'}; border-radius:8px; text-align:center; background:white`)
+                    input(type="radio" name="gender" value="Самка" checked=(animal && animal.gender === 'Самка') style="display:none")
+                    div(style="font-size:24px") ♀
+                    div Самка
+                  label(style="flex:1; cursor:pointer; padding:12px; border:2px solid #ddd; border-radius:8px; text-align:center; background:white")
+                    input(type="radio" name="gender" value="" checked=(!animal || !animal.gender) style="display:none")
+                    div(style="font-size:24px") —
+                    div Не указан
+
+              if !isEdit
+                .wizard-nav(style="display:flex; justify-content:space-between; margin-top:24px; padding-top:16px; border-top:1px solid #eee")
+                  button.btn.btn-secondary(type="button" onclick="nextStep(1)") ← Назад
+                  button.btn.btn-primary(type="button" onclick="nextStep(3)") Далее →
+
+            .wizard-page(data-page="3" style=(isEdit ? '' : 'display:none'))
+              h3 Фотография питомца
+              p(style="color:#666; font-size:14px") Добавьте фото — это необязательно, но приятно видеть мордочку! Максимум 5 МБ.
 
               .form-group
-                label(for="birthDate") Дата рождения
-                input#birthDate(type="date" name="birthDate" value=animal?.birth_date)
+                label(for="photo") Выберите файл
+                input#photo(type="file" name="photo" accept="image/*" onchange="previewPhoto(event)")
+                .photo-preview(id="photoPreview" style="margin-top:12px")
+                  if animal && animal.photo_url
+                    p(style="color:#666") Текущее фото:
+                    img(src=animal.photo_url alt=animal.name style="max-width:200px; border-radius:8px")
 
-            .form-row
-              .form-group
-                label(for="gender") Пол
-                select#gender(name="gender")
-                  option(value="") Не указан
-                  option(value="Самец" selected=(animal?.gender === 'Самец')) Самец
-                  option(value="Самка" selected=(animal?.gender === 'Самка')) Самка
+              if !isEdit
+                .wizard-nav(style="display:flex; justify-content:space-between; margin-top:24px; padding-top:16px; border-top:1px solid #eee")
+                  button.btn.btn-secondary(type="button" onclick="nextStep(2)") ← Назад
+                  button.btn.btn-primary(type="button" onclick="nextStep(4)") Далее →
 
-            .form-group
-              label(for="photo") Фото питомца
-              input#photo(type="file" name="photo" accept="image/*")
-              if animal?.photo_url
-                .photo-preview
-                  p Текущее фото:
-                  img(src=animal.photo_url alt=animal.name style="max-width: 200px; border-radius: 4px;")
+            if !isEdit
+              .wizard-page(data-page="4" style="display:none")
+                h3 Проверьте данные
+                p(style="color:#666; font-size:14px") Убедитесь что всё правильно — после сохранения вы сможете записать питомца на приём.
 
-            .form-actions
-              button.btn.btn-primary(type="submit")= isEdit ? 'Сохранить изменения' : 'Добавить питомца'
-              a.btn.btn-secondary(href="/client/animals") Отмена
+                .summary(id="summary" style="background:#f8f9fa; padding:16px; border-radius:8px; margin-top:12px")
+
+                .wizard-nav(style="display:flex; justify-content:space-between; margin-top:24px; padding-top:16px; border-top:1px solid #eee")
+                  button.btn.btn-secondary(type="button" onclick="nextStep(3)") ← Назад
+                  button.btn.btn-primary(type="submit") ✓ Добавить питомца
+
+            if isEdit
+              .form-actions(style="display:flex; gap:12px; margin-top:24px; padding-top:16px; border-top:1px solid #eee")
+                button.btn.btn-primary(type="submit") Сохранить изменения
+                a.btn.btn-secondary(href="/client/animals") Отмена
+
+        script.
+          let currentStep = 1;
+          function nextStep(step) {
+            if (step > currentStep) {
+              if (currentStep === 1) {
+                const name = document.getElementById('name').value.trim();
+                const species = document.querySelector('input[name=species]:checked');
+                if (!name) { alert('Введите кличку'); return; }
+                if (!species) { alert('Выберите вид животного'); return; }
+              }
+            }
+            document.querySelectorAll('.wizard-page').forEach(p => p.style.display = 'none');
+            const page = document.querySelector(`.wizard-page[data-page="${step}"]`);
+            if (page) page.style.display = 'block';
+            document.querySelectorAll('.wizard-steps .step').forEach(s => {
+              const n = parseInt(s.dataset.step);
+              if (n === step) { s.style.background = '#007bff'; s.style.color = 'white'; }
+              else if (n < step) { s.style.background = '#28a745'; s.style.color = 'white'; }
+              else { s.style.background = '#e9ecef'; s.style.color = '#666'; }
+            });
+            currentStep = step;
+            if (step === 4) buildSummary();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+
+          function buildSummary() {
+            const name = document.getElementById('name').value || '—';
+            const species = document.querySelector('input[name=species]:checked')?.value || '—';
+            const breed = document.getElementById('breed').value || '—';
+            const birthDate = document.getElementById('birthDate').value || '—';
+            const gender = document.querySelector('input[name=gender]:checked')?.value || 'Не указан';
+            const photoFile = document.getElementById('photo').files[0];
+            const photoText = photoFile ? `${photoFile.name} (${(photoFile.size/1024).toFixed(0)} КБ)` : 'Не загружено';
+            document.getElementById('summary').innerHTML = `
+              <div style="display:grid; grid-template-columns:140px 1fr; gap:8px">
+                <strong>Кличка:</strong><span>${name}</span>
+                <strong>Вид:</strong><span>${species}</span>
+                <strong>Порода:</strong><span>${breed}</span>
+                <strong>Дата рождения:</strong><span>${birthDate}</span>
+                <strong>Пол:</strong><span>${gender}</span>
+                <strong>Фото:</strong><span>${photoText}</span>
+              </div>`;
+          }
+
+          function previewPhoto(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              document.getElementById('photoPreview').innerHTML =
+                `<img src="${ev.target.result}" style="max-width:200px; border-radius:8px">`;
+            };
+            reader.readAsDataURL(file);
+          }
+
+          document.querySelectorAll('.species-option, .gender-picker label').forEach(label => {
+            label.addEventListener('click', () => {
+              const group = label.closest('.species-picker, .gender-picker');
+              group.querySelectorAll('label').forEach(l => l.style.borderColor = '#ddd');
+              label.style.borderColor = '#007bff';
+            });
+          });

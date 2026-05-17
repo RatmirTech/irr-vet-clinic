@@ -1,14 +1,47 @@
 const db = require('../config/db');
 
 const VetModel = {
-  findAll: async () => {
-    const result = await db.query('SELECT * FROM vets ORDER BY created_at DESC');
+  findAll: async (filters = {}) => {
+    const { search, specialization, sortBy } = filters;
+    const params = [];
+    const where = [];
+
+    if (search) {
+      params.push(`%${search.toLowerCase()}%`);
+      where.push(`LOWER(v.full_name) LIKE $${params.length}`);
+    }
+    if (specialization) {
+      params.push(specialization);
+      where.push(`v.specialization = $${params.length}`);
+    }
+
+    const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+    const order = sortBy === 'experience_desc' ? 'v.experience DESC NULLS LAST'
+                : sortBy === 'experience_asc'  ? 'v.experience ASC NULLS LAST'
+                : sortBy === 'name_asc'        ? 'v.full_name ASC'
+                : sortBy === 'name_desc'       ? 'v.full_name DESC'
+                                               : 'v.created_at DESC';
+
+    const result = await db.query(
+      `SELECT v.*, u.email FROM vets v JOIN users u ON u.id = v.user_id ${whereClause} ORDER BY ${order}`,
+      params
+    );
     return result.rows;
   },
 
   findById: async (id) => {
-    const result = await db.query('SELECT * FROM vets WHERE id = $1', [id]);
+    const result = await db.query(
+      'SELECT v.*, u.email FROM vets v JOIN users u ON u.id = v.user_id WHERE v.id = $1',
+      [id]
+    );
     return result.rows[0];
+  },
+
+  getAllSpecializations: async () => {
+    const result = await db.query(
+      `SELECT DISTINCT specialization FROM vets WHERE specialization IS NOT NULL AND specialization <> '' ORDER BY specialization`
+    );
+    return result.rows.map(r => r.specialization);
   },
 
   findByUserId: async (userId) => {

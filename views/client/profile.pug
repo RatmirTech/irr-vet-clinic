@@ -6,7 +6,9 @@ block content
       .sidebar
         h3 Меню клиента
         a(href="/client/dashboard") Дашборд
-        a(href="/animals") Мои питомцы
+        a(href="/client/animals") Мои питомцы
+        a(href="/client/medcards") Медкарты
+        a(href="/client/appointments") Мои записи
         a(href="/client/profile" class="active") Мой профиль
 
       .main-panel
@@ -23,15 +25,15 @@ block content
             .form-row
               .form-group
                 label(for="fullName") ФИО *
-                input#fullName(type="text" name="fullName" value=(client?.full_name || '') required)
+                input#fullName(type="text" name="fullName" value=(client && client.full_name ? client.full_name : '') required)
 
               .form-group
                 label(for="phone") Телефон
-                input#phone(type="tel" name="phone" value=(client?.phone || '') placeholder="+7 (999) 999-99-99")
+                input#phone(type="tel" name="phone" value=(client && client.phone ? client.phone : '') placeholder="+7 (999) 999-99-99")
 
             .form-group
               label Email (не изменяется)
-              input(type="email" disabled value="email@example.com")
+              input(type="email" disabled value=(client && client.email ? client.email : ''))
 
             .form-actions
               button.btn.btn-primary(type="submit") Сохранить изменения

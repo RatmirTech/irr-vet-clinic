@@ -1,0 +1,59 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню администратора
+        a(href="/admin/dashboard") Дашборд
+        a(href="/admin/vets") Ветеринары
+        a(href="/admin/services") Услуги
+        a(href="/admin/schedule") Расписание
+        a(href="/admin/clients") Клиенты
+        a(href="/admin/medcards") Медкарты
+        a(href="/admin/animals" class="active") Животные
+        if isSuperAdmin
+          a(href="/admin/admins") Администраторы
+
+      .main-panel
+        h1.dashboard-title Редактировать животное
+
+        p.text-muted Владелец: #{animal.owner_name}
+
+        .form-wrapper
+          form(method="POST" enctype="multipart/form-data" action=`/admin/animals/${animal.id}`)
+            .form-row
+              .form-group
+                label(for="name") Кличка *
+                input#name(type="text" name="name" value=animal.name required)
+
+              .form-group
+                label(for="species") Вид
+                input#species(type="text" name="species" value=(animal.species || ''))
+
+            .form-row
+              .form-group
+                label(for="breed") Порода
+                input#breed(type="text" name="breed" value=(animal.breed || ''))
+
+              .form-group
+                label(for="gender") Пол
+                select#gender(name="gender")
+                  option(value="" selected=(animal.gender ? false : true)) Не указан
+                  option(value="Самец" selected=(animal.gender === 'Самец')) Самец
+                  option(value="Самка" selected=(animal.gender === 'Самка')) Самка
+
+            .form-group
+              label(for="birthDate") Дата рождения
+              input#birthDate(type="date" name="birthDate" value=(animal.birth_date ? animal.birth_date.toISOString().split('T')[0] : ''))
+
+            .form-group
+              label(for="photo") Фото
+              input#photo(type="file" name="photo" accept="image/*")
+              if animal.photo_url
+                .photo-preview
+                  img(src=animal.photo_url style="max-width:150px;border-radius:4px;margin-top:8px")
+
+            .form-actions
+              button.btn.btn-primary(type="submit") Сохранить
+              a.btn.btn-secondary(href="/admin/animals") Отмена

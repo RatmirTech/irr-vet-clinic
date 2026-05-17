@@ -9,15 +9,32 @@ block content
         a(href="/admin/vets") Ветеринары
         a(href="/admin/services") Услуги
         a(href="/admin/schedule" class="active") Расписание
+        a(href="/admin/animals") Животные
         a(href="/admin/clients") Клиенты
+        a(href="/admin/medcards") Медкарты
         if isSuperAdmin
           a(href="/admin/admins") Администраторы
 
       .main-panel
-        h1.dashboard-title Управление расписанием
+        .panel-header
+          h1.dashboard-title Управление расписанием
+          div
+            a.btn.btn-secondary(href="/admin/schedule/vet") Календарь
+            a.btn.btn-secondary(href="/admin/schedule/export" style="margin-left:8px") Экспорт CSV
+            a.btn.btn-secondary(href="/admin/schedule/export.xlsx" style="margin-left:8px") Экспорт XLSX
+
+        .form-wrapper(style="background:#fff8e1; border-left:4px solid #ffc107; padding:16px; border-radius:6px; margin-bottom:24px")
+          h3(style="margin-top:0") Импорт из Excel/CSV
+          p(style="font-size:13px; color:#666; margin:6px 0")
+            | Столбцы (любой регистр): <strong>vet_email</strong> или <strong>vet_id</strong>, <strong>date</strong> (YYYY-MM-DD), <strong>time</strong> (HH:MM).
+            | Дубли пропускаются автоматически.
+          form(method="POST" action="/admin/schedule/import" enctype="multipart/form-data" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap")
+            input(type="file" name="file" accept=".xlsx,.xls,.csv" required style="flex:1; min-width:240px")
+            button.btn.btn-primary(type="submit") Импортировать
+            a.btn.btn-secondary(href="/admin/schedule/import-template") Скачать шаблон XLSX
 
         .form-wrapper
-          h3 Генерация слотов
+          h3 Генерация слотов по диапазону дат
           form(method="POST" action="/admin/schedule/generate" id="generateForm")
             .form-row
               .form-group
@@ -27,19 +44,83 @@ block content
                   each vet in vets
                     option(value=vet.id)= vet.full_name
 
+            .form-row
               .form-group
-                label(for="date") Дата *
-                input#date(type="date" name="date" required)
+                label(for="dateFrom") Дата с *
+                input#dateFrom(type="date" name="dateFrom" required)
+              .form-group
+                label(for="dateTo") Дата по (если пусто — только один день)
+                input#dateTo(type="date" name="dateTo")
+              .form-group
+                label(style="display:flex; align-items:center; gap:6px; margin-top:24px")
+                  input(type="checkbox" name="skipWeekends" value="1")
+                  span Пропускать выходные (Сб, Вс)
+
+            .form-row
+              .form-group
+                label(for="fromTime") Слоты с
+                input#fromTime(type="time" name="fromTime" value="09:00" step="900")
+              .form-group
+                label(for="toTime") Слоты до
+                input#toTime(type="time" name="toTime" value="18:00" step="900")
 
             .form-group
-              label Время приёмов (выберите несколько):
-              .time-checkboxes
-                - const times = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+              label Конкретные слоты (15-мин шаг):
+              .time-checkboxes(id="timeCheckboxes" style="display:flex; flex-wrap:wrap; gap:6px;")
+                -
+                  const times = [];
+                  for (let h = 9; h < 19; h++) {
+                    for (let m = 0; m < 60; m += 15) {
+                      times.push(String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0'));
+                    }
+                  }
                 each time in times
-                  .checkbox-item
-                    input(type="checkbox" id=`time-${time}` name="times" value=time)
+                  .checkbox-item(style="white-space:nowrap")
+                    input(type="checkbox" id=`time-${time}` name="times" value=time checked)
                     label(for=`time-${time}`)= time
+              .form-actions(style="margin-top:8px")
+                button.btn.btn-secondary(type="button" onclick="toggleAll(true)") Выбрать все
+                button.btn.btn-secondary(type="button" onclick="toggleAll(false)") Снять все
+
+            .form-group
+              label Исключить даты (например, праздники):
+              .excluded-dates(id="excludedDates")
+              .form-actions(style="margin-top:4px")
+                input(type="date" id="excludeDateInput")
+                button.btn.btn-secondary(type="button" onclick="addExclude()") + Добавить дату исключения
 
             .form-actions
               button.btn.btn-primary(type="submit") Сгенерировать слоты
               a.btn.btn-secondary(href="/admin/schedule") Отмена
+
+        script.
+          function toggleAll(checked) {
+            document.querySelectorAll('#timeCheckboxes input[type=checkbox]').forEach(cb => cb.checked = checked);
+          }
+          ['fromTime', 'toTime'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+              const from = document.getElementById('fromTime').value;
+              const to = document.getElementById('toTime').value;
+              if (!from || !to) return;
+              document.querySelectorAll('#timeCheckboxes input[type=checkbox]').forEach(cb => {
+                cb.checked = cb.value >= from && cb.value < to;
+              });
+            });
+          });
+          const excluded = new Set();
+          function renderExcluded() {
+            const el = document.getElementById('excludedDates');
+            el.innerHTML = '';
+            for (const d of excluded) {
+              const tag = document.createElement('span');
+              tag.style.cssText = 'display:inline-flex; align-items:center; gap:4px; padding:4px 8px; background:#fee; border-radius:4px; margin:2px;';
+              tag.innerHTML = d + ' <button type="button" style="border:0;background:transparent;cursor:pointer;color:#c00">×</button>' +
+                '<input type="hidden" name="excludeDates" value="' + d + '">';
+              tag.querySelector('button').addEventListener('click', () => { excluded.delete(d); renderExcluded(); });
+              el.appendChild(tag);
+            }
+          }
+          function addExclude() {
+            const v = document.getElementById('excludeDateInput').value;
+            if (v) { excluded.add(v); renderExcluded(); document.getElementById('excludeDateInput').value = ''; }
+          }

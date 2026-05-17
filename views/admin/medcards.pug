@@ -1,0 +1,50 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню администратора
+        a(href="/admin/dashboard") Дашборд
+        a(href="/admin/vets") Ветеринары
+        a(href="/admin/services") Услуги
+        a(href="/admin/schedule") Расписание
+        a(href="/admin/animals") Животные
+        a(href="/admin/clients") Клиенты
+        a(href="/admin/medcards" class="active") Медкарты
+        if isSuperAdmin
+          a(href="/admin/admins") Администраторы
+
+      .main-panel
+        h1.dashboard-title Медицинские карты
+
+        form(method="GET" action="/admin/medcards" style="display:flex; gap:8px; margin-bottom:16px")
+          input(type="search" name="search" placeholder="Поиск по кличке или владельцу..." value=search style="flex:1; padding:8px")
+          button.btn.btn-primary(type="submit") Поиск
+          a.btn.btn-secondary(href="/admin/medcards") Сброс
+
+        if records && records.length
+          table.table
+            thead
+              tr
+                th Животное
+                th Вид/порода
+                th Владелец
+                th Приёмов
+                th Последний приём
+                th Действия
+            tbody
+              each r in records
+                tr
+                  td= r.animal_name
+                  td= (r.species || '—') + (r.breed ? ' / ' + r.breed : '')
+                  td
+                    div= r.client_name
+                    small(style="color:#666")= r.client_email
+                  td= r.visits_count
+                  td= r.last_visit ? new Date(r.last_visit).toLocaleDateString('ru-RU') : '—'
+                  td
+                    a.btn.btn-secondary(href=`/admin/medcards/${r.animal_id}`) Открыть
+        else
+          .empty-state
+            h3 Медкарт не найдено

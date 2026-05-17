@@ -1,0 +1,49 @@
+extends ../layout/base.pug
+
+block content
+  .container
+    .dashboard
+      .sidebar
+        h3 Меню администратора
+        a(href="/admin/dashboard") Дашборд
+        a(href="/admin/vets") Ветеринары
+        a(href="/admin/services") Услуги
+        a(href="/admin/schedule") Расписание
+        a(href="/admin/animals") Животные
+        a(href="/admin/clients" class="active") Клиенты
+        a(href="/admin/medcards") Медкарты
+        if isSuperAdmin
+          a(href="/admin/admins") Администраторы
+
+      .main-panel
+        .panel-header
+          h1.dashboard-title Регистрация клиента
+          a.btn.btn-secondary(href="/admin/clients") ← К списку
+
+        p(style="color:#666") Шаг 1 из 3: создание учётной записи. После сохранения вы перейдёте к добавлению питомца.
+
+        if error
+          .flash-message.flash-error= error
+
+        .form-wrapper
+          form(method="POST" action="/admin/clients/new")
+            .form-row
+              .form-group
+                label(for="fullName") ФИО *
+                input#fullName(type="text" name="fullName" required placeholder="Иванов Иван Иванович")
+              .form-group
+                label(for="phone") Телефон
+                input#phone(type="tel" name="phone" placeholder="+7 (999) 000-00-00")
+
+            .form-row
+              .form-group
+                label(for="email") Email (для входа) *
+                input#email(type="email" name="email" required placeholder="client@example.com")
+              .form-group
+                label(for="password") Пароль *
+                input#password(type="text" name="password" required value="client123" placeholder="Минимум 6 символов")
+                small(style="color:#666") Пароль будет сообщён клиенту устно
+
+            .form-actions
+              button.btn.btn-primary(type="submit") Сохранить и добавить питомца →
+              a.btn.btn-secondary(href="/admin/clients") Отмена
