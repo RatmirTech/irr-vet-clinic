@@ -18,33 +18,77 @@ block content
       .main-panel
         h1.dashboard-title Медицинские карты
 
-        form(method="GET" action="/admin/medcards" style="display:flex; gap:8px; margin-bottom:16px")
-          input(type="search" name="search" placeholder="Поиск по кличке или владельцу..." value=search style="flex:1; padding:8px")
+        form.filter-bar(method="GET" action="/admin/medcards")
+          input.input(type="search" name="search" placeholder="Поиск по кличке или владельцу..." value=search)
           button.btn.btn-primary(type="submit") Поиск
           a.btn.btn-secondary(href="/admin/medcards") Сброс
 
         if records && records.length
-          table.table
-            thead
-              tr
-                th Животное
-                th Вид/порода
-                th Владелец
-                th Приёмов
-                th Последний приём
-                th Действия
-            tbody
-              each r in records
+          .table-responsive
+            table.data-table.sortable
+              thead
                 tr
-                  td= r.animal_name
-                  td= (r.species || '—') + (r.breed ? ' / ' + r.breed : '')
-                  td
-                    div= r.client_name
-                    small(style="color:#666")= r.client_email
-                  td= r.visits_count
-                  td= r.last_visit ? new Date(r.last_visit).toLocaleDateString('ru-RU') : '—'
-                  td
-                    a.btn.btn-secondary(href=`/admin/medcards/${r.animal_id}`) Открыть
+                  th(data-sort="string") Животное ⇅
+                  th(data-sort="string") Вид/порода ⇅
+                  th(data-sort="string") Владелец ⇅
+                  th(data-sort="number") Приёмов ⇅
+                  th(data-sort="date") Последний приём ⇅
+                  th.col-actions Действия
+              tbody
+                each r in records
+                  tr
+                    td= r.animal_name
+                    td= (r.species || '—') + (r.breed ? ' / ' + r.breed : '')
+                    td
+                      div= r.client_name
+                      small(style="color:#666")= r.client_email
+                    td= r.visits_count
+                    td= r.last_visit ? new Date(r.last_visit).toLocaleDateString('ru-RU') : '—'
+                    td.col-actions
+                      a.btn.btn-sm.btn-primary(href=`/admin/medcards/${r.animal_id}`) Открыть
         else
           .empty-state
             h3 Медкарт не найдено
+
+        script.
+          document.querySelectorAll('table.sortable th[data-sort]').forEach((th, idx) => {
+            th.style.cursor = 'pointer';
+            th.addEventListener('click', () => {
+              const table = th.closest('table');
+              const tbody = table.querySelector('tbody');
+              const rows = Array.from(tbody.querySelectorAll('tr'));
+              const type = th.dataset.sort;
+              const asc = th.dataset.asc !== 'true';
+              th.dataset.asc = asc;
+              rows.sort((a, b) => {
+                const av = a.children[idx].innerText.trim();
+                const bv = b.children[idx].innerText.trim();
+                if (type === 'number') return (parseFloat(av) - parseFloat(bv)) * (asc ? 1 : -1);
+                if (type === 'date') {
+                  const parse = s => {
+                    const m = s.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+                    return m ? new Date(`${m[3]}-${m[2]}-${m[1]}`).getTime() : 0;
+                  };
+                  return (parse(av) - parse(bv)) * (asc ? 1 : -1);
+                }
+                return av.localeCompare(bv, 'ru') * (asc ? 1 : -1);
+              });
+              rows.forEach(r => tbody.appendChild(r));
+            });
+          });
+
+    style.
+      .filter-bar { display:flex; gap:8px; align-items:center; margin-bottom:16px; }
+      .filter-bar .input { flex:1; padding:10px 14px; border:1px solid #ddd; border-radius:6px; font-size:14px; height:42px; box-sizing:border-box; }
+      .filter-bar .btn { height:42px; padding:0 18px; display:inline-flex; align-items:center; }
+      .table-responsive { overflow-x:auto; background:white; border-radius:8px; padding:8px; box-shadow:0 2px 4px rgba(0,0,0,0.08); }
+      .data-table { width:100%; border-collapse:collapse; }
+      .data-table th, .data-table td { padding:12px 14px; text-align:left; border-bottom:1px solid #eee; vertical-align:middle; }
+      .data-table th { background:#f8f9fa; font-weight:600; user-select:none; }
+      .col-actions { width:120px; text-align:right; }
+      .btn { padding:8px 14px; border:none; border-radius:4px; cursor:pointer; text-decoration:none; font-size:13px; display:inline-block; text-align:center; line-height:1.2; }
+      .btn-sm { padding:6px 12px; font-size:12px; }
+      .btn-primary { background:#28a745; color:white; }
+      .btn-primary:hover { background:#218838; }
+      .btn-secondary { background:#6c757d; color:white; }
+      .empty-state { background:#f9f9f9; padding:32px; text-align:center; color:#666; border-radius:8px; }

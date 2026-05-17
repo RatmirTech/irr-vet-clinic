@@ -167,6 +167,43 @@ const runMigrations = async () => {
     await db.query(`CREATE INDEX IF NOT EXISTS idx_visits_vet_id ON visits(vet_id)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_visit_photos_visit_id ON visit_photos(visit_id)`);
 
+    await db.query(`
+      CREATE OR REPLACE FUNCTION protect_last_super_admin()
+      RETURNS TRIGGER AS $$
+      DECLARE
+        super_count INTEGER;
+      BEGIN
+        IF TG_OP = 'DELETE' THEN
+          IF OLD.is_super_admin = TRUE THEN
+            SELECT COUNT(*) INTO super_count FROM users WHERE is_super_admin = TRUE;
+            IF super_count <= 1 THEN
+              RAISE EXCEPTION 'Нельзя удалить последнего супер-администратора (id=%, email=%)', OLD.id, OLD.email
+                USING ERRCODE = 'check_violation';
+            END IF;
+          END IF;
+          RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+          IF OLD.is_super_admin = TRUE AND (NEW.is_super_admin = FALSE OR NEW.role <> 'admin') THEN
+            SELECT COUNT(*) INTO super_count FROM users WHERE is_super_admin = TRUE AND id <> OLD.id;
+            IF super_count = 0 THEN
+              RAISE EXCEPTION 'Нельзя снять флаг супер-администратора или сменить роль у последнего супер-администратора (id=%, email=%)', OLD.id, OLD.email
+                USING ERRCODE = 'check_violation';
+            END IF;
+          END IF;
+          RETURN NEW;
+        END IF;
+        RETURN NULL;
+      END;
+      $$ LANGUAGE plpgsql;
+    `);
+
+    await db.query(`DROP TRIGGER IF EXISTS trg_protect_last_super_admin ON users`);
+    await db.query(`
+      CREATE TRIGGER trg_protect_last_super_admin
+      BEFORE DELETE OR UPDATE ON users
+      FOR EACH ROW EXECUTE FUNCTION protect_last_super_admin();
+    `);
+
     const bcrypt = require('bcryptjs');
     const superAdminCheck = await db.query(`SELECT id FROM users WHERE is_super_admin = TRUE LIMIT 1`);
     if (superAdminCheck.rows.length === 0) {

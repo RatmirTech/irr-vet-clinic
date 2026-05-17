@@ -9,39 +9,133 @@ block content
         a(href="/admin/vets") Ветеринары
         a(href="/admin/services") Услуги
         a(href="/admin/schedule") Расписание
+        a(href="/admin/animals" class="active") Животные
         a(href="/admin/clients") Клиенты
         a(href="/admin/medcards") Медкарты
-        a(href="/admin/animals" class="active") Животные
         if isSuperAdmin
           a(href="/admin/admins") Администраторы
 
       .main-panel
         h1.dashboard-title Управление животными
 
-        table.table
-          thead
-            tr
-              th Фото
-              th Кличка
-              th Вид / Порода
-              th Владелец
-              th Email владельца
-              th Пол
-              th Действия
-          tbody
-            each animal in animals
-              tr
-                td
-                  if animal.photo_url
-                    img(src=animal.photo_url alt=animal.name style="width:40px;height:40px;object-fit:cover;border-radius:4px")
-                  else
-                    span —
-                td= animal.name
-                td= (animal.species || '') + (animal.breed ? ' / ' + animal.breed : '')
-                td= animal.owner_name
-                td= animal.owner_email
-                td= animal.gender || '—'
-                td
-                  a.btn.btn-secondary(href=`/admin/animals/${animal.id}/edit`) Изменить
-                  form(method="POST" action=`/admin/animals/${animal.id}/delete` style="display:inline;margin-left:4px")
-                    button.btn.btn-danger(type="submit" onclick="return confirm('Удалить животное?')") Удалить
+        .filter-bar
+          input#animalSearch.input(type="search" placeholder="Поиск по кличке, виду, породе, владельцу...")
+          select#speciesFilter.select
+            option(value="") Все виды
+          select#genderFilter.select
+            option(value="") Все полы
+            option(value="Самец") Самец
+            option(value="Самка") Самка
+          span.counter#resultCount
+
+        if animals && animals.length
+          .table-responsive
+            table.data-table.sortable
+              thead
+                tr
+                  th.col-photo Фото
+                  th(data-sort="string") Кличка ⇅
+                  th(data-sort="string") Вид / Порода ⇅
+                  th(data-sort="string") Владелец ⇅
+                  th(data-sort="string") Email ⇅
+                  th(data-sort="string") Пол ⇅
+                  th.col-actions Действия
+              tbody#animalsBody
+                each animal in animals
+                  tr(data-name=(animal.name || '').toLowerCase() data-species=(animal.species || '').toLowerCase() data-breed=(animal.breed || '').toLowerCase() data-owner=((animal.owner_name || '') + ' ' + (animal.owner_email || '')).toLowerCase() data-gender=(animal.gender || ''))
+                    td.col-photo
+                      if animal.photo_url
+                        img(src=animal.photo_url alt=animal.name)
+                      else
+                        .photo-placeholder 🐾
+                    td= animal.name
+                    td= (animal.species || '—') + (animal.breed ? ' / ' + animal.breed : '')
+                    td= animal.owner_name
+                    td.text-muted= animal.owner_email
+                    td= animal.gender || '—'
+                    td.col-actions
+                      .actions-stack
+                        a.btn.btn-sm.btn-primary(href=`/admin/animals/${animal.id}/edit`) Изменить
+                        form(method="POST" action=`/admin/animals/${animal.id}/delete`)
+                          button.btn.btn-sm.btn-danger(type="submit" onclick="return confirm('Удалить животное?')") Удалить
+        else
+          .empty-state
+            h3 Животных не найдено
+
+        script.
+          (function() {
+            const search = document.getElementById('animalSearch');
+            const speciesSel = document.getElementById('speciesFilter');
+            const genderSel = document.getElementById('genderFilter');
+            const counter = document.getElementById('resultCount');
+            const tbody = document.getElementById('animalsBody');
+            if (!tbody) return;
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const speciesSet = new Set();
+            rows.forEach(r => { if (r.dataset.species) speciesSet.add(r.dataset.species); });
+            Array.from(speciesSet).sort().forEach(s => {
+              const opt = document.createElement('option');
+              opt.value = s;
+              opt.textContent = s.charAt(0).toUpperCase() + s.slice(1);
+              speciesSel.appendChild(opt);
+            });
+            function apply() {
+              const q = search.value.trim().toLowerCase();
+              const sp = speciesSel.value;
+              const g = genderSel.value;
+              let visible = 0;
+              rows.forEach(r => {
+                const matchQ = !q || r.dataset.name.includes(q) || r.dataset.species.includes(q) || r.dataset.breed.includes(q) || r.dataset.owner.includes(q);
+                const matchS = !sp || r.dataset.species === sp;
+                const matchG = !g || r.dataset.gender === g;
+                const show = matchQ && matchS && matchG;
+                r.style.display = show ? '' : 'none';
+                if (show) visible++;
+              });
+              counter.textContent = `Найдено: ${visible} из ${rows.length}`;
+            }
+            search.addEventListener('input', apply);
+            speciesSel.addEventListener('change', apply);
+            genderSel.addEventListener('change', apply);
+            apply();
+
+            document.querySelectorAll('table.sortable th[data-sort]').forEach((th, idx) => {
+              th.style.cursor = 'pointer';
+              th.addEventListener('click', () => {
+                const visibleRows = rows.filter(r => r.style.display !== 'none');
+                const asc = th.dataset.asc !== 'true';
+                th.dataset.asc = asc;
+                visibleRows.sort((a, b) => {
+                  const av = a.children[idx].innerText.trim();
+                  const bv = b.children[idx].innerText.trim();
+                  return av.localeCompare(bv, 'ru') * (asc ? 1 : -1);
+                });
+                visibleRows.forEach(r => tbody.appendChild(r));
+              });
+            });
+          })();
+
+    style.
+      .filter-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; align-items:center; }
+      .filter-bar .input, .filter-bar .select { padding:0 12px; height:42px; border:1px solid #ddd; border-radius:6px; font-size:14px; box-sizing:border-box; background:white; }
+      .filter-bar .input { flex:1; min-width:240px; }
+      .counter { color:#666; font-size:13px; white-space:nowrap; }
+      .table-responsive { overflow-x:auto; background:white; border-radius:8px; padding:8px; box-shadow:0 2px 4px rgba(0,0,0,0.08); }
+      .data-table { width:100%; border-collapse:collapse; }
+      .data-table th, .data-table td { padding:12px 14px; text-align:left; border-bottom:1px solid #eee; vertical-align:middle; }
+      .data-table th { background:#f8f9fa; font-weight:600; user-select:none; }
+      .col-photo { width:70px; }
+      .col-photo img { width:48px; height:48px; border-radius:6px; object-fit:cover; display:block; }
+      .photo-placeholder { width:48px; height:48px; border-radius:6px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; font-size:22px; }
+      .col-actions { width:140px; }
+      .text-muted { color:#666; font-size:13px; }
+      .actions-stack { display:flex; flex-direction:column; gap:6px; }
+      .actions-stack form { margin:0; }
+      .actions-stack .btn { width:100%; box-sizing:border-box; }
+      .btn { padding:8px 14px; border:none; border-radius:4px; cursor:pointer; text-decoration:none; font-size:13px; display:inline-block; text-align:center; line-height:1.2; }
+      .btn-sm { padding:6px 10px; font-size:12px; }
+      .btn-primary { background:#2E5FA3; color:white; }
+      .btn-primary:hover { background:#244c87; }
+      .btn-danger { background:#dc3545; color:white; }
+      .btn-danger:hover { background:#c82333; }
+      .empty-state { background:#f9f9f9; padding:32px; text-align:center; color:#666; border-radius:8px; }

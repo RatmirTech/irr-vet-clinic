@@ -8,7 +8,7 @@ block content
       if isAuthenticated
         if role === 'client'
           a.btn.btn-primary(href="/client/dashboard") Мой кабинет
-          a.btn.btn-secondary(href="/appointments/new") Записаться на приём
+          a.btn.btn-secondary(href="/client/appointments/new") Записаться на приём
         else if role === 'vet'
           a.btn.btn-primary(href="/vet/dashboard") Мой кабинет
         else if role === 'admin'

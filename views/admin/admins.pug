@@ -9,43 +9,74 @@ block content
         a(href="/admin/vets") Ветеринары
         a(href="/admin/services") Услуги
         a(href="/admin/schedule") Расписание
+        a(href="/admin/animals") Животные
         a(href="/admin/clients") Клиенты
         a(href="/admin/medcards") Медкарты
         if isSuperAdmin
           a(href="/admin/admins" class="active") Администраторы
 
       .main-panel
-        .page-header
+        .panel-header
           h1.dashboard-title Администраторы
           a.btn.btn-primary(href="/admin/admins/new") + Добавить администратора
 
-        table.table
-          thead
-            tr
-              th ФИО
-              th Email
-              th Должность
-              th Телефон
-              th Тип
-              th Дата создания
-              th Действия
-          tbody
-            each admin in admins
+        .table-responsive
+          table.data-table
+            thead
               tr
-                td= admin.full_name || '—'
-                td= admin.email
-                td= admin.position || '—'
-                td= admin.phone || '—'
-                td
-                  if admin.is_super_admin
-                    span.badge.badge-super Супер-администратор
-                  else
-                    span.badge.badge-admin Администратор
-                td= new Date(admin.created_at).toLocaleDateString('ru-RU')
-                td
-                  a.btn.btn-secondary(href=`/admin/admins/${admin.id}/edit` style="margin-right:4px") Изменить
-                  if !admin.is_super_admin
-                    form(method="POST" action=`/admin/admins/${admin.id}/delete` style="display:inline")
-                      button.btn.btn-danger(type="submit" onclick="return confirm('Удалить администратора?')") Удалить
-                  else
-                    span.text-muted(title="Супер-администратора нельзя удалить") 🔒
+                th.col-name ФИО
+                th.col-email Email
+                th.col-position Должность
+                th.col-phone Телефон
+                th.col-type Тип
+                th.col-date Дата создания
+                th.col-actions Действия
+            tbody
+              each admin in admins
+                tr
+                  td.col-name= admin.full_name || '—'
+                  td.col-email.text-muted= admin.email
+                  td.col-position= admin.position || '—'
+                  td.col-phone= admin.phone || '—'
+                  td.col-type
+                    if admin.is_super_admin
+                      span.badge.badge-super Супер-админ
+                    else
+                      span.badge.badge-admin Администратор
+                  td.col-date= new Date(admin.created_at).toLocaleDateString('ru-RU')
+                  td.col-actions
+                    .actions-stack
+                      a.btn.btn-sm.btn-primary(href=`/admin/admins/${admin.id}/edit`) Изменить
+                      if !admin.is_super_admin
+                        form(method="POST" action=`/admin/admins/${admin.id}/delete`)
+                          button.btn.btn-sm.btn-danger(type="submit" onclick="return confirm('Удалить администратора?')") Удалить
+                      else
+                        span.lock-icon(title="Супер-администратора нельзя удалить") 🔒
+
+    style.
+      .panel-header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+      .table-responsive { overflow-x:auto; background:#fff; border-radius:8px; padding:8px; box-shadow:0 2px 4px rgba(0,0,0,0.08); }
+      .data-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+      .data-table th, .data-table td { padding:12px 14px; text-align:left; border-bottom:1px solid #eee; vertical-align:middle; word-wrap:break-word; }
+      .data-table th { background:#f8f9fa; font-weight:600; color:#2E5FA3; font-size:13px; }
+      .col-name { width:180px; }
+      .col-email { width:220px; word-break:break-all; }
+      .col-position { width:160px; }
+      .col-phone { width:140px; white-space:nowrap; }
+      .col-type { width:140px; }
+      .col-date { width:120px; white-space:nowrap; }
+      .col-actions { width:140px; }
+      .text-muted { color:#666; font-size:13px; }
+      .badge { display:inline-block; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600; white-space:nowrap; }
+      .badge-super { background:#fde68a; color:#92400e; border:1px solid #fbbf24; }
+      .badge-admin { background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe; }
+      .actions-stack { display:flex; flex-direction:column; gap:6px; align-items:stretch; }
+      .actions-stack form { margin:0; }
+      .actions-stack .btn { width:100%; box-sizing:border-box; }
+      .lock-icon { display:inline-flex; align-items:center; justify-content:center; font-size:18px; color:#999; padding:8px 0; }
+      .btn { padding:8px 14px; border:none; border-radius:4px; cursor:pointer; text-decoration:none; font-size:13px; display:inline-block; text-align:center; line-height:1.2; box-sizing:border-box; font-family:inherit; }
+      .btn-sm { padding:6px 10px; font-size:12px; }
+      .btn-primary { background:#2E5FA3; color:#fff; }
+      .btn-primary:hover { background:#244c87; }
+      .btn-danger { background:#dc3545; color:#fff; }
+      .btn-danger:hover { background:#c82333; }

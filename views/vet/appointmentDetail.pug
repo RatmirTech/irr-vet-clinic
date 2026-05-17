@@ -31,9 +31,9 @@ block content
             .detail-label Дата и время:
             .detail-value
               if appointment.slot_date && appointment.slot_time
-                | #{appointment.slot_date} #{appointment.slot_time}
+                | #{new Date(appointment.slot_date).toLocaleDateString('ru-RU')} #{String(appointment.slot_time).slice(0,5)}
               else
-                | -
+                | —
 
           .detail-row
             .detail-label Статус:

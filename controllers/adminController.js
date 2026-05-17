@@ -306,9 +306,16 @@ const adminController = {
   getSchedule: async (req, res) => {
     try {
       const vets = await VetModel.findAll();
+      const clinic = require('../config/clinic');
       res.render('admin/schedule', {
         pageTitle: 'Управление расписанием',
         vets,
+        clinic: {
+          openTime: clinic.OPEN_TIME,
+          closeTime: clinic.CLOSE_TIME,
+          stepSeconds: clinic.STEP_SECONDS,
+          times: clinic.buildSlotTimes(),
+        },
       });
     } catch (err) {
       console.error(err);
@@ -331,6 +338,7 @@ const adminController = {
 
       let appointments = [];
       let selectedVet = null;
+      let freeSlotsByDay = {};
 
       if (vetId) {
         selectedVet = vets.find(v => v.id == vetId);
@@ -353,6 +361,25 @@ const adminController = {
           [vetId, startDate, endDate]
         );
         appointments = result.rows;
+
+        const freeSlotsResult = await db.query(
+          `SELECT ss.slot_date, ss.slot_time
+           FROM schedule_slots ss
+           WHERE ss.vet_id = $1
+             AND ss.slot_date BETWEEN $2 AND $3
+             AND ss.is_available = TRUE
+             AND ss.id NOT IN (
+               SELECT slot_id FROM appointments
+               WHERE slot_id IS NOT NULL AND status IN ('pending', 'confirmed')
+             )
+           ORDER BY ss.slot_date, ss.slot_time`,
+          [vetId, startDate, endDate]
+        );
+        for (const row of freeSlotsResult.rows) {
+          const key = new Date(row.slot_date).toISOString().slice(0, 10);
+          if (!freeSlotsByDay[key]) freeSlotsByDay[key] = [];
+          freeSlotsByDay[key].push(String(row.slot_time).slice(0, 5));
+        }
       }
 
       const byDay = {};
@@ -363,8 +390,14 @@ const adminController = {
       }
 
       const monthLabel = targetDate.toLocaleString('ru-RU', { month: 'long', year: 'numeric' });
-      const prevMonth = new Date(year, monthIndex - 1, 1).toISOString().slice(0, 7);
-      const nextMonth = new Date(year, monthIndex + 1, 1).toISOString().slice(0, 7);
+      const shiftMonth = (offset) => {
+        const m = monthIndex + offset;
+        const y = year + Math.floor(m / 12);
+        const mm = ((m % 12) + 12) % 12;
+        return `${y}-${String(mm + 1).padStart(2, '0')}`;
+      };
+      const prevMonth = shiftMonth(-1);
+      const nextMonth = shiftMonth(1);
 
       res.render('admin/vetSchedule', {
         pageTitle: 'Расписание ветеринара',
@@ -372,14 +405,17 @@ const adminController = {
         selectedVetId: vetId || '',
         selectedVet,
         byDay,
+        freeSlotsByDay,
         daysInMonth,
-        firstDayOfWeek: firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1, 
+        firstDayOfWeek: firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1,
         monthLabel,
         currentMonth: `${year}-${String(monthIndex + 1).padStart(2, '0')}`,
         prevMonth,
         nextMonth,
         today: now.getDate(),
         isCurrentMonth: year === now.getFullYear() && monthIndex === now.getMonth(),
+        year,
+        monthIndex,
       });
     } catch (err) {
       console.error(err);

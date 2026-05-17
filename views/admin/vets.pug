@@ -22,13 +22,13 @@ block content
 
         - var f = filters || { search: '', specialization: '', sortBy: '' }
         - var specs = specializations || []
-        form.filter-bar(method="GET" action="/admin/vets" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;")
-          input(type="search" name="search" placeholder="Поиск по ФИО..." value=f.search style="flex:1; min-width:200px; padding:8px;")
-          select(name="specialization" style="padding:8px;")
+        form.filter-bar(method="GET" action="/admin/vets")
+          input.input(type="search" name="search" placeholder="Поиск по ФИО..." value=f.search)
+          select.select(name="specialization")
             option(value="") Все специализации
             each spec in specs
               option(value=spec selected=(f.specialization === spec))= spec
-          select(name="sortBy" style="padding:8px;")
+          select.select(name="sortBy")
             option(value="") По дате создания
             option(value="name_asc" selected=(f.sortBy === 'name_asc')) ФИО А-Я
             option(value="name_desc" selected=(f.sortBy === 'name_desc')) ФИО Я-А
@@ -39,44 +39,78 @@ block content
 
         if vets && vets.length > 0
           .table-responsive
-            table
+            table.data-table
               thead
                 tr
-                  th Фото
+                  th.col-photo Фото
                   th ФИО
                   th Email
                   th Специализация
-                  th Опыт
-                  th Заявки
-                  th Действия
+                  th.col-exp Опыт
+                  th.col-req Заявки
+                  th.col-actions Действия
               tbody
                 - var cMap = countsByVet || {}
                 each vet in vets
                   - var counts = cMap[vet.id] || { pending: 0, confirmed: 0, completed: 0, cancelled: 0 }
                   - var total = counts.pending + counts.confirmed + counts.completed + counts.cancelled
                   tr
-                    td
+                    td.col-photo
                       if vet.photo_url
-                        img(src=vet.photo_url alt=vet.full_name style="max-width: 50px; max-height: 50px; border-radius: 4px; object-fit: cover;")
+                        img(src=vet.photo_url alt=vet.full_name)
                       else
-                        img(src="/images/logo.png" alt="Нет фото" style="max-width: 50px; max-height: 50px;")
+                        .photo-placeholder 👤
                     td= vet.full_name
-                    td= vet.email
+                    td.text-muted= vet.email
                     td= vet.specialization || '—'
-                    td= (vet.experience || 0) + ' лет'
-                    td
-                      a(href=`/admin/vets/${vet.id}/requests` style="display:inline-block; padding:4px 8px; background:#eef; border-radius:4px; text-decoration:none;")
-                        | Всего: #{total}
-                      br
-                      small(style="color:#666")
-                        | Ожидает: #{counts.pending} / Подтв: #{counts.confirmed} / Заверш: #{counts.completed}
-                    td
-                      .actions
+                    td.col-exp= (vet.experience || 0) + ' лет'
+                    td.col-req
+                      a.req-link(href=`/admin/vets/${vet.id}/requests` title="Все заявки этого ветеринара")
+                        | Всего:
+                        strong= total
+                      .req-breakdown
+                        span(style="color:#856404") Ож: #{counts.pending}
+                        span(style="color:#155724") Подт: #{counts.confirmed}
+                        span(style="color:#0c5460") Зав: #{counts.completed}
+                    td.col-actions
+                      .actions-stack
                         a.btn.btn-sm.btn-primary(href=`/admin/vets/${vet.id}/edit`) Редактировать
-                        form(method="POST" action=`/admin/vets/${vet.id}/delete` style="display:inline;")
+                        form(method="POST" action=`/admin/vets/${vet.id}/delete`)
                           button.btn.btn-sm.btn-danger(type="submit" onclick="return confirm('Вы уверены?')") Удалить
         else
           .empty-state
             h3 Ветеринаров не найдено
             p
               a(href="/admin/vets/new") Добавьте первого ветеринара
+
+    style.
+      .panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px; }
+      .filter-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; align-items:center; }
+      .filter-bar .input, .filter-bar .select { padding:0 12px; height:42px; border:1px solid #ddd; border-radius:6px; font-size:14px; box-sizing:border-box; background:white; }
+      .filter-bar .input { flex:1; min-width:200px; }
+      .filter-bar .btn { height:42px; padding:0 18px; display:inline-flex; align-items:center; }
+      .table-responsive { overflow-x:auto; background:white; border-radius:8px; padding:8px; box-shadow:0 2px 4px rgba(0,0,0,0.08); }
+      .data-table { width:100%; border-collapse:collapse; }
+      .data-table th, .data-table td { padding:12px 14px; text-align:left; border-bottom:1px solid #eee; vertical-align:middle; }
+      .data-table th { background:#f8f9fa; font-weight:600; }
+      .col-photo { width:70px; }
+      .col-photo img { width:48px; height:48px; border-radius:6px; object-fit:cover; display:block; }
+      .photo-placeholder { width:48px; height:48px; border-radius:6px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; font-size:22px; }
+      .col-exp { width:80px; white-space:nowrap; }
+      .col-req { width:180px; }
+      .col-actions { width:160px; }
+      .text-muted { color:#666; font-size:13px; }
+      .req-link { display:inline-block; padding:4px 10px; background:#eef; border-radius:4px; text-decoration:none; color:#2E5FA3; font-size:13px; margin-bottom:6px; }
+      .req-link:hover { background:#dde; }
+      .req-breakdown { display:flex; flex-direction:column; gap:2px; font-size:12px; }
+      .actions-stack { display:flex; flex-direction:column; gap:6px; align-items:stretch; }
+      .actions-stack form { margin:0; }
+      .actions-stack .btn { width:100%; box-sizing:border-box; }
+      .btn { padding:8px 14px; border:none; border-radius:4px; cursor:pointer; text-decoration:none; font-size:13px; display:inline-block; text-align:center; line-height:1.2; }
+      .btn-sm { padding:6px 10px; font-size:12px; }
+      .btn-primary { background:#2E5FA3; color:white; }
+      .btn-primary:hover { background:#244c87; }
+      .btn-secondary { background:#6c757d; color:white; }
+      .btn-danger { background:#dc3545; color:white; }
+      .btn-danger:hover { background:#c82333; }
+      .empty-state { background:#f9f9f9; padding:32px; text-align:center; color:#666; border-radius:8px; }
