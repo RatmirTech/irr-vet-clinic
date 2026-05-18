@@ -3,11 +3,13 @@ const { expect } = require('chai');
 const app = require('../server');
 
 describe('Authentication', () => {
+  const password = 'TestPassword123';
   const testUser = {
     fullName: 'Test User',
     email: 'testuser' + Date.now() + '@example.com',
     phone: '79999999999',
-    password: 'TestPassword123'
+    password,
+    confirmPassword: password,
   };
 
   describe('POST /auth/register', () => {
@@ -54,7 +56,7 @@ describe('Authentication', () => {
           email: testUser.email,
           password: 'WrongPassword123'
         })
-        .expect(302)
+        .expect(401)
         .end(done);
     });
   });

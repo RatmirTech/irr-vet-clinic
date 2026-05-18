@@ -4,11 +4,13 @@ const app = require('../server');
 
 describe('Animals', () => {
   let clientCookie;
+  const password = 'Password123';
   const testUser = {
     fullName: 'Animal Owner',
     email: 'animalowner' + Date.now() + '@example.com',
     phone: '79999999998',
-    password: 'Password123'
+    password,
+    confirmPassword: password,
   };
 
   before((done) => {
