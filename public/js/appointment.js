@@ -30,7 +30,6 @@ function renderSlots(slots) {
   });
 }
 
-// Event listeners for appointment form
 $(document).ready(function () {
   const vetSelect = $('#vet_id');
   const dateInput = $('#appointment_date');

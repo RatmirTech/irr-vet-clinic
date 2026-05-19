@@ -8,7 +8,6 @@ block content
         a(href="/client/dashboard") Дашборд
         a(href="/client/animals") Мои питомцы
         a(href="/client/medcards") Медкарты
-        a(href="/client/appointments") Мои записи
         a(href="/client/appointments" class="active") Мои записи
         a(href="/client/profile") Мой профиль
 
@@ -17,51 +16,59 @@ block content
 
         .form-wrapper
           form(method="POST" action="/client/appointments" id="appointmentForm" data-validate="true")
-            h3 Шаг 1: Выберите ветеринара и дату
+            section.step
+              h3.step-title
+                span.step-num 1
+                | Выберите ветеринара и дату
 
-            .form-row
+              .form-row
+                .form-group
+                  label(for="vetId") Ветеринар *
+                  select#vetId.control(name="vetId" required)
+                    option(value="") Выберите ветеринара...
+                    each vet in vets
+                      option(value=vet.id)= vet.full_name + (vet.specialization ? ' — ' + vet.specialization : '')
+
+                .form-group
+                  label(for="appointmentDate") Дата *
+                  input#appointmentDate.control(type="date" required)
+
+            section.step
+              h3.step-title
+                span.step-num 2
+                | Выберите время приёма
+              #slotsContainer.slots-container
+                .slots-hint Сначала выберите ветеринара и дату
+
+            section.step
+              h3.step-title
+                span.step-num 3
+                | Выберите питомца и услугу
+
+              .form-row
+                .form-group
+                  label(for="animalId") Мой питомец *
+                  select#animalId.control(name="animalId" required)
+                    option(value="") Выберите питомца...
+                    each animal in animals
+                      option(value=animal.id)= animal.name + ' (' + animal.species + ')'
+
+                .form-group
+                  label(for="serviceId") Услуга
+                  select#serviceId.control(name="serviceId")
+                    option(value="") Выберите услугу...
+                    each service in services
+                      option(value=service.id)= service.name + ' (₽' + service.price + ')'
+
               .form-group
-                label(for="vetId") Ветеринар *
-                select#vetId(name="vetId" required)
-                  option(value="") Выберите ветеринара...
-                  each vet in vets
-                    option(value=vet.id)= vet.full_name + ' (' + vet.specialization + ')'
-
-              .form-group
-                label(for="appointmentDate") Дата *
-                input#appointmentDate(type="date" required)
-
-            h3 Шаг 2: Выберите время приёма
-
-            #slotsContainer.slots-container
-              p Выберите дату, чтобы посмотреть доступное время
-
-            h3 Шаг 3: Выберите питомца и услугу
-
-            .form-row
-              .form-group
-                label(for="animalId") Мой питомец *
-                select#animalId(name="animalId" required)
-                  option(value="") Выберите питомца...
-                  each animal in animals
-                    option(value=animal.id)= animal.name + ' (' + animal.species + ')'
-
-              .form-group
-                label(for="serviceId") Услуга
-                select#serviceId(name="serviceId")
-                  option(value="") Выберите услугу...
-                  each service in services
-                    option(value=service.id)= service.name + ' (₽' + service.price + ')'
-
-            .form-group
-              label(for="notes") Заметки (опционально)
-              textarea#notes(name="notes" placeholder="Добавьте информацию для врача...")
+                label(for="notes") Заметки (опционально)
+                textarea#notes.control(name="notes" rows="3" placeholder="Добавьте информацию для врача...")
 
             input#slotId(type="hidden" name="slotId" required)
 
             .form-actions
-              button.btn.btn-primary(type="submit") Записаться на приём
-              a.btn.btn-secondary(href="/client/appointments") Отмена
+              button.btn.btn-primary.btn-lg(type="submit") Записаться на приём
+              a.btn.btn-secondary.btn-lg(href="/client/appointments") Отмена
 
     script.
       document.addEventListener('DOMContentLoaded', function() {
@@ -73,50 +80,98 @@ block content
         const today = new Date().toISOString().split('T')[0];
         dateInput.setAttribute('min', today);
 
+        function fmt(time) {
+          return String(time).slice(0, 5);
+        }
+        function periodOf(time) {
+          const h = parseInt(time.slice(0, 2), 10);
+          if (h < 12) return 'Утро';
+          if (h < 17) return 'День';
+          return 'Вечер';
+        }
+
         function loadSlots() {
           const vetId = vetSelect.value;
           const date = dateInput.value;
 
           if (!vetId || !date) {
-            slotsContainer.innerHTML = '<p>Выберите дату, чтобы посмотреть доступное время</p>';
+            slotsContainer.innerHTML = '<div class="slots-hint">Сначала выберите ветеринара и дату</div>';
             slotInput.value = '';
             return;
           }
 
+          slotsContainer.innerHTML = '<div class="slots-hint">Загрузка...</div>';
+
           fetch(`/api/slots?vetId=${vetId}&date=${date}`)
             .then(response => response.json())
             .then(slots => {
-              if (slots.length === 0) {
-                slotsContainer.innerHTML = '<p>Нет доступных слотов на эту дату</p>';
+              if (!slots || slots.length === 0) {
+                slotsContainer.innerHTML = '<div class="slots-empty">😔 На эту дату свободных слотов нет — попробуйте другую дату или ветеринара.</div>';
                 slotInput.value = '';
                 return;
               }
 
-              let html = '<div class="slots-grid">';
-              slots.forEach(slot => {
-                html += `
-                  <div class="slot-option">
-                    <input type="radio" id="slot-${slot.id}" name="temp_slot" value="${slot.id}" data-slot-id="${slot.id}">
-                    <label for="slot-${slot.id}">${slot.slot_time}</label>
-                  </div>
-                `;
+              const groups = { 'Утро': [], 'День': [], 'Вечер': [] };
+              slots.forEach(s => groups[periodOf(s.slot_time)].push(s));
+
+              let html = '';
+              ['Утро', 'День', 'Вечер'].forEach(period => {
+                if (!groups[period].length) return;
+                html += `<div class="period-block"><div class="period-label">${period}</div><div class="slots-grid">`;
+                groups[period].forEach(slot => {
+                  html += `<label class="slot-chip"><input type="radio" name="temp_slot" value="${slot.id}"><span>${fmt(slot.slot_time)}</span></label>`;
+                });
+                html += '</div></div>';
               });
-              html += '</div>';
+              html += `<div class="slots-info">Доступно: <strong>${slots.length}</strong> слот(ов)</div>`;
 
               slotsContainer.innerHTML = html;
 
               document.querySelectorAll('input[name="temp_slot"]').forEach(radio => {
                 radio.addEventListener('change', function() {
-                  slotInput.value = this.getAttribute('data-slot-id');
+                  slotInput.value = this.value;
                 });
               });
             })
             .catch(err => {
               console.error('Error loading slots:', err);
-              slotsContainer.innerHTML = '<p>Ошибка при загрузке слотов</p>';
+              slotsContainer.innerHTML = '<div class="slots-empty">Ошибка при загрузке слотов</div>';
             });
         }
 
         vetSelect.addEventListener('change', loadSlots);
         dateInput.addEventListener('change', loadSlots);
       });
+
+    style.
+      .form-wrapper { background:#fff; border-radius:10px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+      .step { background:#f8fafc; border-radius:10px; padding:20px; margin-bottom:18px; border-left:4px solid #2E5FA3; }
+      .step-title { margin:0 0 14px 0; color:#2E5FA3; font-size:18px; display:flex; align-items:center; gap:10px; }
+      .step-num { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; background:#2E5FA3; color:#fff; border-radius:50%; font-size:14px; font-weight:700; }
+      .form-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px; }
+      .form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+      .form-group label { font-weight:600; font-size:14px; color:#333; }
+      .control { height:42px; padding:0 12px; border:1px solid #ddd; border-radius:6px; font-size:14px; background:#fff; box-sizing:border-box; font-family:inherit; width:100%; }
+      textarea.control { height:auto; padding:10px 12px; resize:vertical; min-height:80px; }
+      .control:focus { outline:none; border-color:#2E5FA3; box-shadow:0 0 0 3px rgba(46,95,163,0.12); }
+
+      .slots-container { min-height:60px; }
+      .slots-hint, .slots-empty { padding:18px; text-align:center; color:#888; background:#fff; border:1px dashed #cbd5e1; border-radius:8px; }
+      .slots-empty { color:#a33; border-color:#fdd; background:#fff5f5; }
+      .slots-info { margin-top:10px; color:#666; font-size:13px; }
+      .period-block { margin-bottom:14px; }
+      .period-block:last-child { margin-bottom:0; }
+      .period-label { font-weight:700; color:#475569; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; }
+      .slots-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(88px, 1fr)); gap:8px; }
+      .slot-chip { position:relative; display:flex; align-items:center; justify-content:center; padding:10px 8px; background:#fff; border:2px solid #e2e8f0; border-radius:8px; cursor:pointer; font-size:15px; font-weight:600; color:#334155; font-family:monospace; transition:all 0.12s; user-select:none; }
+      .slot-chip input { position:absolute; opacity:0; pointer-events:none; }
+      .slot-chip:hover { border-color:#2E5FA3; color:#2E5FA3; transform:translateY(-1px); }
+      .slot-chip:has(input:checked) { background:#2E5FA3; color:#fff; border-color:#2E5FA3; box-shadow:0 4px 10px rgba(46,95,163,0.25); }
+
+      .form-actions { display:flex; gap:10px; margin-top:24px; padding-top:18px; border-top:1px solid #eee; }
+      .btn { padding:0 18px; height:42px; border:none; border-radius:6px; cursor:pointer; text-decoration:none; font-size:14px; display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box; font-family:inherit; }
+      .btn-lg { height:46px; padding:0 24px; font-size:15px; font-weight:600; }
+      .btn-primary { background:#2E5FA3; color:#fff; }
+      .btn-primary:hover { background:#244c87; }
+      .btn-secondary { background:#6c757d; color:#fff; }
+      .btn-secondary:hover { background:#5a6268; }

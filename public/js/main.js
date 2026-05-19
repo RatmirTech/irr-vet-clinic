@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-  // Toggle navigation menu on mobile
   const navBurger = document.getElementById('nav-burger');
   const navMenu = document.getElementById('nav-menu');
 
@@ -9,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Close menu when a link is clicked
   if (navMenu) {
     const navLinks = navMenu.querySelectorAll('a');
     navLinks.forEach((link) => {
@@ -19,7 +17,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Dismiss flash messages
   const closeButtons = document.querySelectorAll('.close-btn');
   closeButtons.forEach((btn) => {
     btn.addEventListener('click', function () {
@@ -27,7 +24,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // Auto-dismiss alerts after 5 seconds
   const flashMessages = document.querySelectorAll('.flash-message');
   flashMessages.forEach((msg) => {
     setTimeout(function () {

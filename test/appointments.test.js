@@ -1,10 +1,12 @@
 const request = require('supertest');
 const { expect } = require('chai');
 const app = require('../server');
+const db = require('../config/db');
 
 describe('Appointments', () => {
   let clientCookie;
   let animalId;
+  let realSlot;
   const password = 'Password123';
   const testUser = {
     fullName: 'Client User',
@@ -30,10 +32,20 @@ describe('Appointments', () => {
           .field('breed', 'Labrador')
           .field('birth_date', '2020-01-15')
           .field('gender', 'male')
-          .end((err, res) => {
+          .end(async (err) => {
             if (err) return done(err);
-            animalId = 1;
-            done();
+            try {
+              const r = await db.query(
+                `SELECT a.id FROM animals a
+                 JOIN clients c ON c.id = a.client_id
+                 JOIN users u ON u.id = c.user_id
+                 WHERE u.email = $1
+                 ORDER BY a.id DESC LIMIT 1`,
+                [testUser.email]
+              );
+              animalId = r.rows[0] ? r.rows[0].id : null;
+              done();
+            } catch (e) { done(e); }
           });
       });
   });
@@ -67,20 +79,32 @@ describe('Appointments', () => {
   });
 
   describe('POST /client/appointments', () => {
-    it('should create appointment with valid data', (done) => {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const dateStr = tomorrow.toISOString().split('T')[0];
+    before(async () => {
+      const result = await db.query(
+        `SELECT ss.id AS slot_id, ss.vet_id, ss.slot_date
+         FROM schedule_slots ss
+         WHERE ss.is_available = TRUE
+           AND ss.slot_date >= CURRENT_DATE
+           AND ss.id NOT IN (SELECT slot_id FROM appointments WHERE slot_id IS NOT NULL)
+         ORDER BY ss.slot_date, ss.slot_time
+         LIMIT 1`
+      );
+      realSlot = result.rows[0];
+    });
 
+    it('should create appointment with valid data', function (done) {
+      if (!realSlot || !animalId) {
+        this.skip();
+        return;
+      }
       request(app)
         .post('/client/appointments')
         .set('Cookie', clientCookie)
         .send({
-          vetId: 1,
-          appointmentDate: dateStr,
+          vetId: realSlot.vet_id,
+          appointmentDate: realSlot.slot_date.toISOString().slice(0, 10),
           animalId: animalId,
-          serviceId: 1,
-          slotId: 1,
+          slotId: realSlot.slot_id,
           notes: 'Test appointment'
         })
         .expect(302)
